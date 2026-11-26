@@ -1,0 +1,3560 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SonicAura — 環境辨識與歌詞同步音樂播放器</title>
+  <style>
+    /* ========================================================================
+       1. 六款主題 CSS 變數系統（100% 純內嵌 CSS，無任何外部 CDN 依賴）
+       ======================================================================== */
+    :root,
+    [data-theme="dark"] {
+      --bg-gradient: radial-gradient(circle at 15% 12%, #1e1b4b 0%, #090d16 48%, #04060c 100%);
+      --bg-overlay: rgba(4, 6, 12, 0.42);
+      --surface-header: rgba(9, 13, 22, 0.84);
+      --surface-card: rgba(17, 24, 39, 0.78);
+      --surface-card-strong: rgba(13, 19, 34, 0.96);
+      --surface-subtle: rgba(255, 255, 255, 0.06);
+      --surface-hover: rgba(255, 255, 255, 0.12);
+      --surface-input: rgba(6, 10, 20, 0.78);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --border-strong: rgba(56, 189, 248, 0.48);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --accent-glow: rgba(56, 189, 248, 0.55);
+      --btn-primary-bg: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(255, 255, 255, 0.18);
+      --shadow-card: 0 20px 44px -18px rgba(0, 0, 0, 0.75);
+      --success-bg: rgba(16, 185, 129, 0.18);
+      --success-text: #34d399;
+      --danger-bg: rgba(244, 63, 94, 0.18);
+      --danger-text: #fb7185;
+    }
+
+    /* 1. 炫光粉 */
+    [data-theme="neon-pink"] {
+      --bg-gradient: radial-gradient(circle at 20% 10%, #500724 0%, #23061a 48%, #11030d 100%);
+      --bg-overlay: rgba(17, 3, 13, 0.40);
+      --surface-header: rgba(28, 6, 22, 0.86);
+      --surface-card: rgba(49, 12, 39, 0.80);
+      --surface-card-strong: rgba(34, 8, 28, 0.96);
+      --surface-subtle: rgba(244, 114, 182, 0.10);
+      --surface-hover: rgba(244, 114, 182, 0.18);
+      --surface-input: rgba(22, 4, 17, 0.78);
+      --border-color: rgba(244, 114, 182, 0.24);
+      --border-strong: rgba(244, 114, 182, 0.58);
+      --text-primary: #fdf2f8;
+      --text-secondary: #fbcfe8;
+      --text-muted: #f472b6;
+      --accent: #f472b6;
+      --accent-2: #fb7185;
+      --accent-soft: rgba(244, 114, 182, 0.20);
+      --accent-glow: rgba(244, 114, 182, 0.65);
+      --btn-primary-bg: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #a855f7 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(251, 207, 232, 0.24);
+      --shadow-card: 0 20px 44px -18px rgba(32, 2, 24, 0.78);
+    }
+
+    /* 2. 烈焰橘 */
+    [data-theme="flame-orange"] {
+      --bg-gradient: radial-gradient(circle at 18% 12%, #431407 0%, #1c0b05 50%, #0f0603 100%);
+      --bg-overlay: rgba(15, 6, 3, 0.42);
+      --surface-header: rgba(26, 10, 4, 0.86);
+      --surface-card: rgba(48, 19, 9, 0.80);
+      --surface-card-strong: rgba(34, 13, 6, 0.96);
+      --surface-subtle: rgba(251, 146, 60, 0.10);
+      --surface-hover: rgba(251, 146, 60, 0.18);
+      --surface-input: rgba(20, 8, 3, 0.78);
+      --border-color: rgba(251, 146, 60, 0.24);
+      --border-strong: rgba(251, 146, 60, 0.58);
+      --text-primary: #fff7ed;
+      --text-secondary: #fed7aa;
+      --text-muted: #fdba74;
+      --accent: #fb923c;
+      --accent-2: #f59e0b;
+      --accent-soft: rgba(251, 146, 60, 0.20);
+      --accent-glow: rgba(251, 146, 60, 0.65);
+      --btn-primary-bg: linear-gradient(135deg, #f97316 0%, #ef4444 55%, #f59e0b 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(254, 215, 170, 0.24);
+      --shadow-card: 0 20px 44px -18px rgba(28, 7, 2, 0.78);
+    }
+
+    /* 3. 寶寶藍（柔和淺色底 + 高對比深海藍字體） */
+    [data-theme="baby-blue"] {
+      --bg-gradient: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 50%, #dbeafe 100%);
+      --bg-overlay: rgba(240, 249, 255, 0.22);
+      --surface-header: rgba(240, 249, 255, 0.90);
+      --surface-card: rgba(255, 255, 255, 0.86);
+      --surface-card-strong: rgba(248, 252, 255, 0.98);
+      --surface-subtle: rgba(14, 116, 144, 0.08);
+      --surface-hover: rgba(14, 116, 144, 0.15);
+      --surface-input: rgba(255, 255, 255, 0.95);
+      --border-color: rgba(15, 41, 66, 0.15);
+      --border-strong: rgba(2, 132, 199, 0.48);
+      --text-primary: #0f2942;
+      --text-secondary: #1e4b73;
+      --text-muted: #3b6d96;
+      --accent: #0284c7;
+      --accent-2: #2563eb;
+      --accent-soft: rgba(2, 132, 199, 0.14);
+      --accent-glow: rgba(2, 132, 199, 0.35);
+      --btn-primary-bg: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(15, 41, 66, 0.18);
+      --shadow-card: 0 14px 34px -14px rgba(15, 41, 66, 0.16);
+      --success-bg: rgba(5, 150, 105, 0.14);
+      --success-text: #047857;
+      --danger-bg: rgba(225, 29, 72, 0.12);
+      --danger-text: #be123c;
+    }
+
+    /* 4. 星空藍 */
+    [data-theme="starry-blue"] {
+      --bg-gradient: radial-gradient(circle at 22% 14%, #1e3a8a 0%, #091534 48%, #030714 100%);
+      --bg-overlay: rgba(3, 7, 20, 0.40);
+      --surface-header: rgba(6, 14, 36, 0.86);
+      --surface-card: rgba(14, 29, 68, 0.80);
+      --surface-card-strong: rgba(10, 21, 52, 0.96);
+      --surface-subtle: rgba(96, 165, 250, 0.10);
+      --surface-hover: rgba(96, 165, 250, 0.18);
+      --surface-input: rgba(5, 11, 28, 0.78);
+      --border-color: rgba(147, 197, 253, 0.22);
+      --border-strong: rgba(96, 165, 250, 0.56);
+      --text-primary: #eff6ff;
+      --text-secondary: #bfdbfe;
+      --text-muted: #93c5fd;
+      --accent: #60a5fa;
+      --accent-2: #818cf8;
+      --accent-soft: rgba(96, 165, 250, 0.18);
+      --accent-glow: rgba(96, 165, 250, 0.65);
+      --btn-primary-bg: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(191, 219, 254, 0.24);
+      --shadow-card: 0 20px 44px -18px rgba(2, 6, 23, 0.80);
+    }
+
+    /* 5. 魔幻紫 */
+    [data-theme="magic-purple"] {
+      --bg-gradient: radial-gradient(circle at 18% 12%, #4c1d95 0%, #1c0a36 48%, #0d041c 100%);
+      --bg-overlay: rgba(13, 4, 28, 0.42);
+      --surface-header: rgba(20, 8, 40, 0.86);
+      --surface-card: rgba(41, 17, 74, 0.80);
+      --surface-card-strong: rgba(28, 11, 52, 0.96);
+      --surface-subtle: rgba(192, 132, 252, 0.10);
+      --surface-hover: rgba(192, 132, 252, 0.18);
+      --surface-input: rgba(16, 6, 32, 0.78);
+      --border-color: rgba(192, 132, 252, 0.24);
+      --border-strong: rgba(192, 132, 252, 0.56);
+      --text-primary: #faf5ff;
+      --text-secondary: #e9d5ff;
+      --text-muted: #d8b4fe;
+      --accent: #c084fc;
+      --accent-2: #e879f9;
+      --accent-soft: rgba(192, 132, 252, 0.20);
+      --accent-glow: rgba(192, 132, 252, 0.65);
+      --btn-primary-bg: linear-gradient(135deg, #9333ea 0%, #c026d3 100%);
+      --btn-primary-text: #ffffff;
+      --slider-track: rgba(233, 213, 255, 0.24);
+      --shadow-card: 0 20px 44px -18px rgba(12, 3, 28, 0.80);
+    }
+
+    /* ========================================================================
+       2. 基礎排版與固定背景圖層（z-index: 0；主內容 z-index: 10）
+       ======================================================================== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--text-primary);
+      background-color: #090d16;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.5;
+    }
+
+    #bgLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    #bgBase, #bgImage, #bgStars, #bgOverlay {
+      position: absolute;
+      inset: 0;
+    }
+    #bgBase {
+      background: var(--bg-gradient);
+      transition: background 0.4s ease;
+    }
+    #bgImage {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transform: scale(1.04);
+      transition: opacity 0.2s ease, filter 0.2s ease;
+    }
+    #bgStars {
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      background-image:
+        radial-gradient(1.5px 1.5px at 12% 20%, rgba(255,255,255,0.9), transparent),
+        radial-gradient(1px 1px at 28% 65%, rgba(191,219,254,0.85), transparent),
+        radial-gradient(2px 2px at 46% 18%, rgba(255,255,255,0.95), transparent),
+        radial-gradient(1.2px 1.2px at 64% 42%, rgba(147,197,253,0.9), transparent),
+        radial-gradient(1.8px 1.8px at 80% 24%, rgba(255,255,255,0.85), transparent),
+        radial-gradient(1px 1px at 88% 72%, rgba(224,242,254,0.9), transparent),
+        radial-gradient(1.5px 1.5px at 34% 84%, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1.2px 1.2px at 72% 82%, rgba(191,219,254,0.85), transparent);
+      background-size: 320px 320px;
+      animation: twinkle 4.5s ease-in-out infinite alternate;
+    }
+    [data-theme="starry-blue"] #bgStars { opacity: 0.92; }
+    @keyframes twinkle { 0% { opacity: 0.45; } 100% { opacity: 0.95; } }
+    #bgOverlay {
+      background: var(--bg-overlay);
+      transition: background 0.35s ease;
+    }
+
+    #appShell {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========================================================================
+       3. 通用元件樣式
+       ======================================================================== */
+    .hidden { display: none !important; }
+    button, input, select, textarea { font-family: inherit; }
+    button { cursor: pointer; }
+
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .subbox {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--border-strong);
+      white-space: nowrap;
+    }
+    .badge-muted {
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+    .badge-success {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid rgba(16, 185, 129, 0.38);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 13px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border: 1px solid transparent;
+      box-shadow: 0 8px 20px -6px var(--accent-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.08); background: var(--btn-primary-bg); border-color: transparent; }
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border: 1px solid rgba(244, 63, 94, 0.38);
+    }
+    .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 10px; }
+    .btn-lg {
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 14px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 14px; font-size: 16px; }
+    .btn-active {
+      background: var(--accent-soft);
+      border-color: var(--border-strong);
+      color: var(--accent);
+    }
+
+    .input {
+      width: 100%;
+      padding: 9px 13px;
+      border-radius: 12px;
+      font-size: 13px;
+      background: var(--surface-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .input::placeholder { color: var(--text-muted); }
+    .input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    /* 滑桿 */
+    input[type="range"].slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--slider-track);
+    }
+    input[type="range"].slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #ffffff;
+      margin-top: -4.5px;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+    input[type="range"].slider::-moz-range-track {
+      height: 6px;
+      border-radius: 999px;
+      background: var(--slider-track);
+    }
+    input[type="range"].slider::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #ffffff;
+    }
+
+    /* 捲軸 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 999px; }
+
+    /* ========================================================================
+       4. 頂部導覽列（品牌左、分頁中、齒輪設定最右上方）
+       ======================================================================== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--surface-header);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .topbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: var(--btn-primary-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 8px 20px -6px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .brand-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    .brand-sub {
+      margin: 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+    .tab-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      border-radius: 15px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+    }
+    .tab-btn {
+      padding: 8px 14px;
+      border-radius: 11px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      box-shadow: 0 6px 16px -6px var(--accent-glow);
+    }
+    .gear-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, background 0.2s ease, border-color 0.2s ease;
+      flex-shrink: 0;
+    }
+    .gear-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+      transform: rotate(45deg) scale(1.05);
+    }
+
+    /* ========================================================================
+       5. 主內容區 & 整合式「播放器 + 同步歌詞」卡片
+       ======================================================================== */
+    .main-container {
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px 18px 36px;
+    }
+
+    /* 整合式單一大卡片 */
+    .unified-player-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    @media (min-width: 900px) {
+      .unified-player-card {
+        grid-template-columns: 5fr 7fr;
+      }
+    }
+
+    .player-pane {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    @media (min-width: 900px) {
+      .player-pane {
+        border-bottom: none;
+        border-right: 1px solid var(--border-color);
+      }
+    }
+
+    .player-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .track-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 220px;
+    }
+    .disc-wrap {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      padding: 4px;
+      background: var(--btn-primary-bg);
+      box-shadow: 0 10px 26px -8px var(--accent-glow);
+      position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
+      animation: spin 16s linear infinite;
+    }
+    .disc-wrap.paused { animation-play-state: paused; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .disc-wrap img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+    .disc-fallback {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1e293b 0%, #090d16 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .disc-hole {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid rgba(255, 255, 255, 0.45);
+    }
+
+    .track-meta { min-width: 0; flex: 1; }
+    .track-title {
+      margin: 6px 0 2px;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-artist {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .transport-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .play-main-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .volume-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 130px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* 右半部：同步歌詞面板（精巧固定高度 + 嚴格內部捲動） */
+    .lyrics-pane {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .lyrics-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .lyrics-header-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .lyrics-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .lyrics-title-row h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .lyrics-status {
+      margin: 3px 0 0;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .lyrics-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    /* 固定高度的歌詞捲動區（手機 190px、電腦 230px），絕不撐開外層頁面 */
+    #lyricsContainer {
+      position: relative;
+      height: 190px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 22px 10px;
+      text-align: center;
+      border-radius: 16px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+    }
+    @media (min-width: 640px) {
+      #lyricsContainer {
+        height: 230px;
+      }
+    }
+
+    .lyric-line {
+      margin: 0 auto 8px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      opacity: 0.62;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      user-select: none;
+    }
+    .lyric-line:hover {
+      background: var(--surface-hover);
+      opacity: 0.9;
+    }
+    .lyric-line.active {
+      color: var(--accent);
+      opacity: 1;
+      font-weight: 800;
+      font-size: 16px;
+      text-shadow: 0 0 18px var(--accent-glow);
+      background: var(--accent-soft);
+    }
+    .lyric-line.selected-line {
+      outline: 1px dashed var(--accent);
+      outline-offset: 2px;
+    }
+    .lyric-ts {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-right: 6px;
+      opacity: 0.7;
+    }
+    .lyric-orig {
+      display: block;
+    }
+    .lyric-trans {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      opacity: 0.88;
+      line-height: 1.45;
+      transition: color 0.22s ease, opacity 0.22s ease;
+    }
+    .lyric-line.active .lyric-trans {
+      color: var(--text-primary);
+      opacity: 0.96;
+      font-weight: 600;
+      text-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .lyrics-footer-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-color);
+    }
+    .offset-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ========================================================================
+       6. 播放清單與拖放匯入區
+       ======================================================================== */
+    .playlist-card {
+      padding: 18px 20px;
+      border: 2px dashed transparent;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .playlist-card.drop-active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .section-head h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .playlist-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-top: 10px;
+    }
+    .track-item {
+      width: 100%;
+      text-align: left;
+      padding: 11px 14px;
+      border-radius: 15px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.18s ease;
+    }
+    .track-item:hover { background: var(--surface-hover); }
+    .track-item.active {
+      background: var(--accent-soft);
+      border-color: var(--border-strong);
+    }
+    .track-item-info { min-width: 0; flex: 1; }
+    .track-item-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-item-sub {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ========================================================================
+       7. 分頁 2：環境聽歌識曲 & 跨平台搜尋佈局
+       ======================================================================== */
+    .recognize-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (min-width: 960px) {
+      .recognize-grid {
+        grid-template-columns: 5fr 7fr;
+      }
+    }
+    .panel { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+    .dur-switcher {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 11px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+    }
+    .dur-btn {
+      padding: 4px 9px;
+      border: none;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .dur-btn.active {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+    }
+
+    .mic-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+    }
+    .mic-btn {
+      width: 114px;
+      height: 114px;
+      border-radius: 50%;
+      border: none;
+      background: var(--btn-primary-bg);
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 14px 32px -8px var(--accent-glow);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .mic-btn:hover { transform: scale(1.05); filter: brightness(1.06); }
+    .mic-btn.recording {
+      animation: pulseRing 1.3s ease-in-out infinite;
+    }
+    @keyframes pulseRing {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { box-shadow: 0 0 0 18px rgba(56, 189, 248, 0); }
+    }
+
+    #spectrumCanvas {
+      width: 100%;
+      height: 70px;
+      display: block;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.22);
+    }
+    .db-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.26);
+      overflow: hidden;
+    }
+    #dbMeterBar {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width 0.1s ease;
+    }
+
+    .search-row { display: flex; gap: 8px; }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .result-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 15px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+    }
+    .result-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+    .result-cover {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--surface-hover);
+    }
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 10px;
+    }
+    .platform-card {
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ========================================================================
+       8. 彈窗系統（搜尋歌詞、編輯歌詞、大字沉浸歌詞、程式設定）
+       ======================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-card-strong);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      padding: 20px 22px;
+      gap: 14px;
+      overflow-y: auto;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; }
+
+    /* 全螢幕大字歌詞 */
+    .immersive-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: var(--surface-card-strong);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      padding: 22px;
+    }
+    #immersiveLyricsBody {
+      position: relative;
+      flex: 1;
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 40px 12px;
+      text-align: center;
+    }
+    #immersiveLyricsBody .lyric-line { font-size: 22px; margin-bottom: 16px; }
+    #immersiveLyricsBody .lyric-line.active { font-size: 28px; }
+    #immersiveLyricsBody .lyric-trans { font-size: 16px; margin-top: 6px; }
+    #immersiveLyricsBody .lyric-line.active .lyric-trans { font-size: 19px; }
+
+    /* 主題選擇格 */
+    .lang-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    @media (min-width: 520px) {
+      .lang-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .lang-btn {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      transition: all 0.18s ease;
+    }
+    .lang-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-strong);
+    }
+    .lang-btn.active {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border-color: transparent;
+      box-shadow: 0 6px 16px -6px var(--accent-glow);
+    }
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    .theme-card {
+      text-align: left;
+      padding: 10px;
+      border-radius: 16px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      transition: all 0.18s ease;
+    }
+    .theme-card.active {
+      background: var(--accent-soft);
+      border-color: var(--border-strong);
+    }
+    .theme-swatch {
+      height: 30px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+    .bg-dropzone {
+      padding: 16px;
+      border-radius: 16px;
+      border: 2px dashed var(--border-color);
+      background: var(--surface-subtle);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .bg-dropzone.drop-active { border-color: var(--accent); background: var(--accent-soft); }
+    .slider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      padding: 14px;
+    }
+
+    /* Toast 提示 */
+    #toastEl {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 90;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: var(--surface-card-strong);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner { padding: 10px 14px; }
+      .nav-actions { width: 100%; justify-content: space-between; }
+      .tab-group { flex: 1; }
+      .tab-btn { flex: 1; padding: 8px 8px; font-size: 12px; }
+      .player-pane, .lyrics-pane { padding: 16px; }
+      .disc-wrap { width: 70px; height: 70px; }
+      .track-title { font-size: 16px; }
+      .btn-lg { padding: 10px 16px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 固定背景圖層（z-index: 0） -->
+  <div id="bgLayer" aria-hidden="true">
+    <div id="bgBase"></div>
+    <div id="bgImage"></div>
+    <div id="bgStars"></div>
+    <div id="bgOverlay"></div>
+  </div>
+
+  <!-- 隱藏的音訊元素 -->
+  <audio id="mainAudio" crossorigin="anonymous"></audio>
+  <audio id="previewAudio" crossorigin="anonymous"></audio>
+
+  <!-- 主應用程式容器（初始即可見，z-index: 10） -->
+  <div id="appShell">
+
+    <!-- 頂部導覽列 -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">SonicAura</h1>
+            <p class="brand-sub" data-i18n="brandSub">環境辨識 · 歌詞同步 · 跨平台音樂中心</p>
+          </div>
+        </div>
+
+        <div class="nav-actions">
+          <nav class="tab-group" aria-label="主功能分頁">
+            <button id="tabBtnPlayer" type="button" class="tab-btn active" onclick="switchTab('player')" data-i18n="tabPlayer">
+              🎵 播放與同步歌詞
+            </button>
+            <button id="tabBtnRecognize" type="button" class="tab-btn" onclick="switchTab('recognize')" data-i18n="tabRecognize">
+              🎙️ 環境聽歌識曲 &amp; 跨平台搜尋
+            </button>
+          </nav>
+
+          <!-- 最右上方：齒輪設定圖示按鈕 -->
+          <button type="button" class="gear-btn" onclick="openSettingsModal()" data-i18n-title="gearTooltip" title="程式設定（語言、主題色彩、背景圖片與辨識引擎）" aria-label="開啟程式設定">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="main-container">
+
+      <!-- ==================================================================
+           分頁 1：播放與同步歌詞（播放器 + 同步歌詞整合為單一大卡片）
+           ================================================================== -->
+      <section id="viewPlayer">
+
+        <div class="card unified-player-card">
+          <!-- 左半部：音樂播放器 -->
+          <div class="player-pane">
+            <div class="player-top-row">
+              <div class="track-header">
+                <div id="discVisual" class="disc-wrap paused">
+                  <img id="trackCoverImg" src="" alt="專輯封面" class="hidden" />
+                  <div id="trackCoverFallback" class="disc-fallback" aria-hidden="true">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <circle cx="12" cy="12" r="9"></circle>
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M12 3a9 9 0 0 1 6.36 2.64"></path>
+                    </svg>
+                  </div>
+                  <div class="disc-hole"></div>
+                </div>
+
+                <div class="track-meta">
+                  <span id="trackSourceBadge" class="badge">內建合成示範曲</span>
+                  <h2 id="trackTitle" class="track-title">Starlight Drift (示範曲)</h2>
+                  <p id="trackArtist" class="track-artist">SonicAura Ambient</p>
+                  <button type="button" class="btn btn-sm" onclick="searchCurrentTrackCrossPlatform()" data-i18n="crossSearchCurrent">
+                    🔗 跨平台搜尋此曲
+                  </button>
+                </div>
+              </div>
+
+              <!-- 音樂播放區右上角：放大版匯入本地音訊 / .lrc 按鈕 -->
+              <label class="btn btn-primary btn-lg" style="cursor:pointer;">
+                <span data-i18n="importLocalBtn">＋ 匯入本地音訊 / .lrc</span>
+                <input id="localFileInput" type="file" multiple accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac,.lrc" class="hidden" />
+              </label>
+            </div>
+
+            <div>
+              <input id="seekBar" type="range" min="0" max="100" value="0" step="0.05" class="slider" aria-label="播放進度" />
+              <div class="time-row">
+                <span id="currentTimeEl">00:00</span>
+                <span id="durationEl">00:00</span>
+              </div>
+
+              <div class="controls-row">
+                <div class="transport-btns">
+                  <button type="button" class="btn btn-icon" onclick="prevTrack()" data-i18n-title="prevTrack" title="上一首" aria-label="上一首">⏮</button>
+                  <button id="playPauseBtn" type="button" class="btn btn-primary play-main-btn" onclick="togglePlay()" data-i18n-title="playPause" title="播放 / 暫停" aria-label="播放或暫停">▶</button>
+                  <button type="button" class="btn btn-icon" onclick="nextTrack()" data-i18n-title="nextTrack" title="下一首" aria-label="下一首">⏭</button>
+                  <button id="loopBtn" type="button" class="btn btn-icon" onclick="toggleLoop()" data-i18n-title="loopOff" title="單曲循環：關閉" aria-label="切換單曲循環">🔁</button>
+                </div>
+
+                <div class="volume-box">
+                  <span aria-hidden="true">🔊</span>
+                  <input id="volumeBar" type="range" min="0" max="1" step="0.02" value="0.8" class="slider" aria-label="音量" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右半部：同步歌詞（固定精巧高度 + 嚴格容器內捲動） -->
+          <div class="lyrics-pane">
+            <div class="lyrics-header">
+              <div class="lyrics-header-top">
+                <div>
+                  <div class="lyrics-title-row">
+                    <h3 data-i18n="syncedLyricsTitle">📝 同步歌詞</h3>
+                    <span id="lyricModeBadge" class="badge">同步時間軸</span>
+                  </div>
+                  <p id="lyricStatusText" class="lyrics-status">🎯 點擊歌詞跳轉進度，或點「搜尋歌詞」挑選最吻合版本</p>
+                </div>
+
+                <!-- 同步歌詞區右上角：放大版搜尋歌詞按鈕 -->
+                <button type="button" class="btn btn-primary btn-lg" onclick="openLyricsSearchModal()" data-i18n="searchLyricsBtn">🔍 搜尋歌詞</button>
+              </div>
+
+              <div class="lyrics-toolbar">
+                <button id="translateLyricsBtn" type="button" class="btn btn-sm" onclick="toggleLyricsTranslation()">🌐 翻譯中文</button>
+                <button type="button" class="btn btn-sm" onclick="openLyricEditorModal()" data-i18n="editLyricsBtn">✏️ 編輯</button>
+                <button type="button" class="btn btn-sm" onclick="exportCurrentLrc()" data-i18n="exportLrcBtn">⬇ 匯出 .lrc</button>
+                <button type="button" class="btn btn-sm" onclick="openImmersiveLyrics()" data-i18n="fullscreenLyricsBtn">⛶ 大字歌詞</button>
+              </div>
+            </div>
+
+            <!-- 固定高度捲動框（手機 190px / 電腦 230px），絕不拉動外層視窗 -->
+            <div id="lyricsContainer" aria-live="polite">
+              <p class="lyric-line">載入示範歌詞中...</p>
+            </div>
+
+            <!-- 底部微調與一鍵對齊工具列 -->
+            <div class="lyrics-footer-bar">
+              <div class="offset-group">
+                <button type="button" class="btn btn-sm" onclick="adjustLyricOffset(-0.5)">-0.5s</button>
+                <button type="button" class="btn btn-sm" onclick="adjustLyricOffset(-0.1)">-0.1s</button>
+                <button id="lyricOffsetBtn" type="button" class="btn btn-sm" onclick="resetLyricOffset()" data-i18n-title="resetOffsetTitle" title="點擊將偏移量歸零">偏移 0.0s</button>
+                <button type="button" class="btn btn-sm" onclick="adjustLyricOffset(0.1)">+0.1s</button>
+                <button type="button" class="btn btn-sm" onclick="adjustLyricOffset(0.5)">+0.5s</button>
+              </div>
+              <button type="button" class="btn btn-sm" onclick="alignSelectedLineToNow()" data-i18n="alignNowBtn" data-i18n-title="alignNowTitle" title="先點選要對齊的歌詞行，再點此按鈕一鍵校正時差">
+                📌 對齊目前時間
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 下方區塊：播放清單 & 本地檔案拖放匯入 -->
+        <div id="playlistDropZone" class="card playlist-card">
+          <div class="section-head">
+            <h3><span data-i18n="playlistTitle">📂 播放清單</span> (<span id="playlistCount">3</span>)</h3>
+          </div>
+          <p class="lyrics-status" style="margin:0;" data-i18n="playlistHint">支援拖放 MP3 / WAV / M4A / OGG / FLAC 與 .lrc 歌詞檔；匯入時將自動清洗檔名雜訊並智慧拆解「歌手 - 歌名」。</p>
+          <div id="playlistContainer" class="playlist-grid"></div>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           分頁 2：環境聽歌識曲 & 跨平台搜尋
+           ================================================================== -->
+      <section id="viewRecognize" class="hidden">
+        <div class="recognize-grid">
+
+          <!-- 左欄：純淨收音 + 雙引擎辨識 -->
+          <div class="card panel">
+            <div class="section-head" style="margin-bottom:0;">
+              <div>
+                <h3 style="margin:0; font-size:16px;" data-i18n="recTitle">🎙️ 環境背景音樂辨識</h3>
+                <p class="lyrics-status" data-i18n="recSub">純淨收音管線 · AudD 聲紋 + Gemini AI 雙引擎</p>
+              </div>
+              <div class="dur-switcher" aria-label="錄音秒數">
+                <button type="button" class="dur-btn" data-dur="8" onclick="setRecordDuration(8)" data-i18n="sec8">8秒</button>
+                <button type="button" class="dur-btn active" data-dur="10" onclick="setRecordDuration(10)" data-i18n="sec10">10秒</button>
+                <button type="button" class="dur-btn" data-dur="15" onclick="setRecordDuration(15)" data-i18n="sec15">15秒</button>
+              </div>
+            </div>
+
+            <div class="mic-center">
+              <button id="recordBtn" type="button" class="mic-btn" onclick="toggleRecording()">
+                <span id="recordBtnIcon" style="font-size:30px;">🎙️</span>
+                <span id="recordBtnText" style="font-size:12px; font-weight:800;" data-i18n="startRecBtn">開始聽歌識曲</span>
+              </button>
+              <p id="recordStatusText" class="lyrics-status" style="text-align:center; font-size:12px; color:var(--text-secondary);" data-i18n="recIdleHint">
+                點擊按鈕並將麥克風靠近音源（已關閉語音降噪與回音消除）
+              </p>
+            </div>
+
+            <div class="subbox" style="padding:12px; display:flex; flex-direction:column; gap:8px;">
+              <canvas id="spectrumCanvas" width="420" height="70"></canvas>
+              <div style="display:flex; justify-content:space-between; font-size:11px;">
+                <span id="dbQualityHint" style="color:var(--text-muted);" data-i18n="dbStrength">收音強度 (dB)</span>
+                <span id="dbMeterText" style="font-family:monospace; font-weight:700; color:var(--accent);">-- dB</span>
+              </div>
+              <div class="db-track"><div id="dbMeterBar"></div></div>
+            </div>
+
+            <div id="recordedAudioBox" class="subbox hidden" style="padding:12px; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px;">
+                <strong data-i18n="replayRecTitle">🎧 重聽剛剛錄下的環境音</strong>
+                <span style="font-size:11px; color:var(--text-muted);" data-i18n="replayRecSub">確認收音是否清晰</span>
+              </div>
+              <audio id="recordedAudioPlayer" controls style="width:100%; height:36px;"></audio>
+            </div>
+
+            <div id="recognitionResultPanel" class="subbox hidden" style="padding:14px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <strong style="font-size:13px;" data-i18n="recResultTitle">🎯 辨識結果與候選比對</strong>
+                <span id="recognitionEngineBadge" class="badge">雙引擎</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label for="aiTranscriptInput" style="font-size:11px; color:var(--text-secondary);" data-i18n="transcriptLabel">聽寫歌詞片段 / 曲風特徵（可直接微調重查）：</label>
+                <div class="search-row">
+                  <input id="aiTranscriptInput" type="text" class="input" data-i18n-placeholder="transcriptPlaceholder" placeholder="輸入或修正聽到的歌詞..." />
+                  <button type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="reVerifyFromTranscript()" data-i18n="recheckBtn">重查曲庫</button>
+                </div>
+              </div>
+              <div id="candidateList" class="result-list"></div>
+            </div>
+          </div>
+
+          <!-- 右欄：歐美跨區 iTunes 搜尋 + 五大平台搜尋中心 -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+
+            <div class="card panel">
+              <div class="section-head" style="margin-bottom:0;">
+                <div>
+                  <h3 style="margin:0; font-size:16px;" data-i18n="itunesTitle">🌍 歐美與全球音樂搜尋（iTunes 曲庫）</h3>
+                  <p class="lyrics-status" data-i18n="itunesSub">支援歐美跨區整合去重與特殊字元，點擊即可試聽或載入播放器</p>
+                </div>
+                <select id="regionSelect" class="input" style="width:auto; padding:6px 10px; font-size:12px;">
+                  <option value="EU_US" data-i18n="regionEUUS">🌍 歐美跨區智慧搜尋 (US/GB/DE)</option>
+                  <option value="US" data-i18n="regionUS">🇺🇸 美國 (US)</option>
+                  <option value="GB" data-i18n="regionGB">🇬🇧 英國 (GB)</option>
+                  <option value="DE" data-i18n="regionDE">🇩🇪 德國 (DE)</option>
+                  <option value="FR" data-i18n="regionFR">🇫🇷 法國 (FR)</option>
+                  <option value="SE" data-i18n="regionSE">🇸🇪 瑞典 (SE)</option>
+                  <option value="TW" data-i18n="regionTW">🇹🇼 台灣 (TW)</option>
+                  <option value="JP" data-i18n="regionJP">🇯🇵 日本 (JP)</option>
+                </select>
+              </div>
+
+              <div class="search-row">
+                <input id="itunesSearchInput" type="text" class="input" data-i18n-placeholder="itunesPlaceholder" placeholder="輸入歌名、歌手或環境音樂（如 Brian Eno, Coldplay, Sigur Rós）..." onkeydown="if(event.key==='Enter') runItunesSearch()" />
+                <button type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="runItunesSearch()" data-i18n="searchBtn">搜尋</button>
+              </div>
+
+              <div class="chip-row">
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Brian Eno Ambient')">Brian Eno</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Coldplay Fix You')">Coldplay</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Daft Punk Instant Crush')">Daft Punk</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Sigur Rós Hoppípolla')">Sigur Rós</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Nils Frahm Says')">Nils Frahm</button>
+              </div>
+
+              <div id="itunesResultsList" class="result-list">
+                <p class="lyrics-status" style="text-align:center; padding:18px 0;" data-i18n="itunesEmptyHint">輸入關鍵字或點擊上方歐美快捷標籤即可搜尋並試聽</p>
+              </div>
+            </div>
+
+            <div class="card panel">
+              <div class="section-head" style="margin-bottom:0;">
+                <div>
+                  <h3 style="margin:0; font-size:16px;" data-i18n="crossHubTitle">🚀 跨平台音樂搜尋中心</h3>
+                  <p class="lyrics-status" data-i18n="crossHubSub">一鍵跳轉至 YouTube、YouTube Music、Apple Music、Spotify、KKBOX</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="openSelectedPlatforms()" data-i18n="batchOpenBtn">批次開啟已勾選平台</button>
+              </div>
+
+              <div class="search-row">
+                <input id="crossPlatformInput" type="text" class="input" value="Coldplay Fix You" data-i18n-placeholder="crossHubPlaceholder" placeholder="輸入欲跨平台搜尋的歌名或歌手..." oninput="renderPlatformCards()" />
+                <button type="button" class="btn" style="white-space:nowrap;" onclick="renderPlatformCards()" data-i18n="updateLinksBtn">更新連結</button>
+              </div>
+
+              <div id="platformCardsGrid" class="platform-grid"></div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       彈窗 1：互動式 LRCLIB 歌詞搜尋與挑選
+       ======================================================================== -->
+  <div id="lyricsSearchModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div>
+          <h3 data-i18n="lrcModalTitle">🔍 搜尋與挑選正確歌詞（LRCLIB）</h3>
+          <p id="lrcTargetDurationHint" class="lyrics-status" data-i18n="lrcModalSub">依歌曲時長自動優先排序最吻合的同步歌詞</p>
+        </div>
+        <button type="button" class="btn btn-sm" onclick="closeLyricsSearchModal()">✕</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:8px; align-items:end;">
+        <div>
+          <label for="lrcSearchTitle" class="lyrics-status" style="display:block; margin-bottom:4px;" data-i18n="songTitleLabel">歌名</label>
+          <input id="lrcSearchTitle" type="text" class="input" data-i18n-placeholder="songTitlePlaceholder" placeholder="輸入歌名..." onkeydown="if(event.key==='Enter') executeLrclibSearch()" />
+        </div>
+        <div>
+          <label for="lrcSearchArtist" class="lyrics-status" style="display:block; margin-bottom:4px;" data-i18n="artistLabel">歌手（選填）</label>
+          <input id="lrcSearchArtist" type="text" class="input" data-i18n-placeholder="artistPlaceholder" placeholder="輸入歌手..." onkeydown="if(event.key==='Enter') executeLrclibSearch()" />
+        </div>
+        <button type="button" class="btn btn-primary" onclick="executeLrclibSearch()" data-i18n="searchBtn">搜尋</button>
+      </div>
+
+      <div id="lrcSearchResultsList" class="result-list" style="max-height:360px;">
+        <p class="lyrics-status" style="text-align:center; padding:24px 0;" data-i18n="lrcEmptyHint">確認歌名與歌手後點擊「搜尋」</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       彈窗 2：歌詞文字編輯
+       ======================================================================== -->
+  <div id="lyricEditorModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3 data-i18n="editorModalTitle">✏️ 編輯目前曲目歌詞（支援 LRC 時間軸）</h3>
+        <button type="button" class="btn btn-sm" onclick="closeLyricEditorModal()">✕</button>
+      </div>
+      <textarea id="lyricEditorTextarea" rows="12" class="input" style="font-family:ui-monospace,monospace; line-height:1.6;" data-i18n-placeholder="editorPlaceholder" placeholder="[00:12.50]貼上或編輯 LRC 同步歌詞..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn" onclick="closeLyricEditorModal()" data-i18n="cancelBtn">取消</button>
+        <button type="button" class="btn btn-primary" onclick="saveEditedLyrics()" data-i18n="applyLyricsBtn">套用歌詞</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       彈窗 3：⛶ 大字歌詞全螢幕沉浸檢視
+       ======================================================================== -->
+  <div id="immersiveModal" class="immersive-modal hidden">
+    <div style="max-width:820px; width:100%; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:14px; border-bottom:1px solid var(--border-color);">
+      <div style="min-width:0;">
+        <h3 id="immersiveTitle" style="margin:0; font-size:20px; font-weight:800;">歌名</h3>
+        <p id="immersiveArtist" class="lyrics-status" style="font-size:13px;">歌手</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <button id="immersiveTranslateBtn" type="button" class="btn btn-sm" onclick="toggleLyricsTranslation()">🌐 翻譯中文</button>
+        <button type="button" class="btn" onclick="closeImmersiveLyrics()" data-i18n="closeFullscreenBtn">✕ 關閉大字歌詞</button>
+      </div>
+    </div>
+    <div id="immersiveLyricsBody"></div>
+  </div>
+
+  <!-- ========================================================================
+       彈窗 4：⚙️ 程式設定（右上方齒輪開啟）
+       ======================================================================== -->
+  <div id="settingsModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <h3 data-i18n="settingsTitle">⚙️ 程式設定</h3>
+          <span id="currentThemeBadge" class="badge">極致黑</span>
+        </div>
+        <button type="button" class="btn btn-sm" onclick="closeSettingsModal()">✕</button>
+      </div>
+
+      <!-- 多國語言切換 -->
+      <div>
+        <div class="section-head">
+          <h4 style="margin:0; font-size:14px;" data-i18n="langSectionTitle">🌐 介面語言 / Language</h4>
+        </div>
+        <div id="langGrid" class="lang-grid">
+          <button type="button" class="lang-btn" data-lang="zh-TW" onclick="applyLanguage('zh-TW', true)">繁體中文</button>
+          <button type="button" class="lang-btn" data-lang="zh-CN" onclick="applyLanguage('zh-CN', true)">简体中文</button>
+          <button type="button" class="lang-btn" data-lang="en" onclick="applyLanguage('en', true)">English</button>
+          <button type="button" class="lang-btn" data-lang="ja" onclick="applyLanguage('ja', true)">日本語</button>
+        </div>
+      </div>
+
+      <!-- 主題顏色 -->
+      <div style="padding-top:12px; border-top:1px solid var(--border-color);">
+        <div class="section-head">
+          <h4 style="margin:0; font-size:14px;" data-i18n="themeSectionTitle">🎨 主題顏色</h4>
+          <button type="button" class="btn btn-sm" onclick="resetAppearanceDefaults()" data-i18n="resetAppearanceBtn">↺ 重設預設外觀</button>
+        </div>
+        <div id="themeGrid" class="theme-grid"></div>
+      </div>
+
+      <!-- 自訂背景圖片 -->
+      <div style="padding-top:12px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:10px;">
+        <div class="section-head" style="margin-bottom:0;">
+          <h4 style="margin:0; font-size:14px;" data-i18n="bgSectionTitle">🖼️ 自訂背景圖片</h4>
+          <button id="clearBgBtn" type="button" class="btn btn-danger btn-sm hidden" onclick="clearCustomBg()" data-i18n="clearBgBtn">清除背景圖片</button>
+        </div>
+
+        <div id="bgDropZone" class="bg-dropzone">
+          <div id="bgPreviewBox" class="hidden" style="display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:8px 10px; border-radius:12px; background:var(--surface-card); border:1px solid var(--border-color);">
+            <img id="bgThumbImg" src="" alt="背景預覽" style="width:64px; height:46px; object-fit:cover; border-radius:8px; flex-shrink:0;" />
+            <div style="min-width:0; flex:1;">
+              <p id="bgFileName" style="margin:0; font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">自訂背景圖片</p>
+              <p style="margin:2px 0 0; font-size:11px; color:var(--accent);" data-i18n="bgAppliedHint">已套用並自動保存</p>
+            </div>
+          </div>
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;">
+            <span data-i18n="uploadBgBtn">📁 匯入背景圖片</span>
+            <input id="bgFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" />
+          </label>
+          <span class="lyrics-status" style="margin:0;" data-i18n="bgDropHint">支援按鈕匯入或拖放 JPG / PNG / WebP / GIF</span>
+        </div>
+
+        <div class="subbox slider-grid">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+              <label for="bgOpacitySlider" style="font-weight:700;" data-i18n="bgOpacityLabel">圖片濃淡程度</label>
+              <span id="bgOpacityVal" style="font-family:monospace; font-weight:700; color:var(--accent);">45%</span>
+            </div>
+            <input id="bgOpacitySlider" type="range" min="0" max="100" step="1" value="45" class="slider" />
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+              <label for="bgBlurSlider" style="font-weight:700;" data-i18n="bgBlurLabel">背景模糊度</label>
+              <span id="bgBlurVal" style="font-family:monospace; font-weight:700; color:var(--accent);">2px</span>
+            </div>
+            <input id="bgBlurSlider" type="range" min="0" max="20" step="1" value="2" class="slider" />
+          </div>
+        </div>
+      </div>
+
+      <!-- AudD 聲紋引擎設定 -->
+      <div style="padding-top:12px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;">
+        <h4 style="margin:0; font-size:14px;" data-i18n="auddSectionTitle">🎛️ 環境聽歌識曲引擎（AudD API Token）</h4>
+        <p class="lyrics-status" style="margin:0;" data-i18n="auddSectionDesc">填入個人 AudD Token 或開啟公開 test 模式以進行聲紋比對；未命中或額度滿時會自動切換至 Gemini AI 兩階段聽寫查證。</p>
+        <div class="search-row">
+          <input id="auddTokenInput" type="text" class="input" style="font-family:ui-monospace,monospace;" data-i18n-placeholder="auddPlaceholder" placeholder="輸入您的 AudD API Token..." />
+          <button type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="saveAuddSettings()" data-i18n="saveBtn">儲存</button>
+        </div>
+        <label style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
+          <input id="auddTestToggle" type="checkbox" onchange="saveAuddSettings()" />
+          <span data-i18n="auddTestLabel">無個人 Token 時，啟用公開 test 測試金鑰模式</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 通知 -->
+  <div id="toastEl" class="hidden" role="status"></div>
+
+  <script>
+    /* ========================================================================
+       1. 安全儲存層（localStorage + IndexedDB，全面 try/catch 防沙盒崩潰）
+       ======================================================================== */
+    function safeGetLS(key, fallback) {
+      try {
+        const v = window.localStorage.getItem(key);
+        return v !== null ? v : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function safeSetLS(key, val) {
+      try { window.localStorage.setItem(key, String(val)); } catch (e) {}
+    }
+    function safeRemoveLS(key) {
+      try { window.localStorage.removeItem(key); } catch (e) {}
+    }
+
+    const BG_DB = 'SonicAuraBgStore';
+    const BG_STORE = 'images';
+    function openBgDb() {
+      return new Promise((resolve, reject) => {
+        try {
+          if (!window.indexedDB) return reject(new Error('no idb'));
+          const req = window.indexedDB.open(BG_DB, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(BG_STORE)) db.createObjectStore(BG_STORE);
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+    async function saveBgToDb(dataUrl) {
+      try {
+        const db = await openBgDb();
+        await new Promise((res, rej) => {
+          const tx = db.transaction(BG_STORE, 'readwrite');
+          tx.objectStore(BG_STORE).put(dataUrl, 'bg');
+          tx.oncomplete = res;
+          tx.onerror = rej;
+        });
+        db.close();
+      } catch (e) {}
+    }
+    async function loadBgFromDb() {
+      try {
+        const db = await openBgDb();
+        const val = await new Promise((res, rej) => {
+          const tx = db.transaction(BG_STORE, 'readonly');
+          const req = tx.objectStore(BG_STORE).get('bg');
+          req.onsuccess = () => res(req.result || null);
+          req.onerror = rej;
+        });
+        db.close();
+        return val;
+      } catch (e) { return null; }
+    }
+    async function clearBgFromDb() {
+      try {
+        const db = await openBgDb();
+        await new Promise((res, rej) => {
+          const tx = db.transaction(BG_STORE, 'readwrite');
+          tx.objectStore(BG_STORE).delete('bg');
+          tx.oncomplete = res;
+          tx.onerror = rej;
+        });
+        db.close();
+      } catch (e) {}
+    }
+
+    /* ========================================================================
+       2. 多國語言字典 (zh-TW / zh-CN / en / ja) 與主題清單、全域狀態
+       ======================================================================== */
+    const I18N = {
+      'zh-TW': {
+        htmlLang: 'zh-Hant-TW',
+        brandSub: '環境辨識 · 歌詞同步 · 跨平台音樂中心',
+        tabPlayer: '🎵 播放與同步歌詞',
+        tabRecognize: '🎙️ 環境聽歌識曲 & 跨平台搜尋',
+        gearTooltip: '程式設定（語言、主題色彩、背景圖片與辨識引擎）',
+        crossSearchCurrent: '🔗 跨平台搜尋此曲',
+        importLocalBtn: '＋ 匯入本地音訊 / .lrc',
+        prevTrack: '上一首',
+        playPause: '播放 / 暫停',
+        nextTrack: '下一首',
+        loopOff: '單曲循環：關閉',
+        loopOn: '單曲循環：開啟',
+        syncedLyricsTitle: '📝 同步歌詞',
+        searchLyricsBtn: '🔍 搜尋歌詞',
+        editLyricsBtn: '✏️ 編輯',
+        exportLrcBtn: '⬇ 匯出 .lrc',
+        fullscreenLyricsBtn: '⛶ 大字歌詞',
+        resetOffsetTitle: '點擊將偏移量歸零',
+        offsetPrefix: '偏移 ',
+        alignNowBtn: '📌 對齊目前時間',
+        alignNowTitle: '先點選要對齊的歌詞行，再點此按鈕一鍵校正時差',
+        playlistTitle: '📂 播放清單',
+        playlistHint: '支援拖放 MP3 / WAV / M4A / OGG / FLAC 與 .lrc 歌詞檔；匯入時將自動清洗檔名雜訊並智慧拆解「歌手 - 歌名」。',
+        recTitle: '🎙️ 環境背景音樂辨識',
+        recSub: '純淨收音管線 · AudD 聲紋 + Gemini AI 雙引擎',
+        sec8: '8秒', sec10: '10秒', sec15: '15秒',
+        startRecBtn: '開始聽歌識曲',
+        stopRecBtn: '停止收音',
+        recIdleHint: '點擊按鈕並將麥克風靠近音源（已關閉語音降噪與回音消除）',
+        dbStrength: '收音強度 (dB)',
+        replayRecTitle: '🎧 重聽剛剛錄下的環境音',
+        replayRecSub: '確認收音是否清晰',
+        recResultTitle: '🎯 辨識結果與候選比對',
+        transcriptLabel: '聽寫歌詞片段 / 曲風特徵（可直接微調重查）：',
+        transcriptPlaceholder: '輸入或修正聽到的歌詞...',
+        recheckBtn: '重查曲庫',
+        itunesTitle: '🌍 歐美與全球音樂搜尋（iTunes 曲庫）',
+        itunesSub: '支援歐美跨區整合去重與特殊字元，點擊即可試聽或載入播放器',
+        regionEUUS: '🌍 歐美跨區智慧搜尋 (US/GB/DE)',
+        regionUS: '🇺🇸 美國 (US)', regionGB: '🇬🇧 英國 (GB)', regionDE: '🇩🇪 德國 (DE)',
+        regionFR: '🇫🇷 法國 (FR)', regionSE: '🇸🇪 瑞典 (SE)', regionTW: '🇹🇼 台灣 (TW)', regionJP: '🇯🇵 日本 (JP)',
+        itunesPlaceholder: '輸入歌名、歌手或環境音樂（如 Brian Eno, Coldplay, Sigur Rós）...',
+        searchBtn: '搜尋',
+        itunesEmptyHint: '輸入關鍵字或點擊上方歐美快捷標籤即可搜尋並試聽',
+        crossHubTitle: '🚀 跨平台音樂搜尋中心',
+        crossHubSub: '一鍵跳轉至 YouTube、YouTube Music、Apple Music、Spotify、KKBOX',
+        batchOpenBtn: '批次開啟已勾選平台',
+        crossHubPlaceholder: '輸入欲跨平台搜尋的歌名或歌手...',
+        updateLinksBtn: '更新連結',
+        openPlatformBtn: '開啟平台 ↗',
+        copyBtn: '複製',
+        lrcModalTitle: '🔍 搜尋與挑選正確歌詞（LRCLIB）',
+        lrcModalSub: '依歌曲時長自動優先排序最吻合的同步歌詞',
+        songTitleLabel: '歌名',
+        songTitlePlaceholder: '輸入歌名...',
+        artistLabel: '歌手（選填）',
+        artistPlaceholder: '輸入歌手...',
+        lrcEmptyHint: '確認歌名與歌手後點擊「搜尋」',
+        editorModalTitle: '✏️ 編輯目前曲目歌詞（支援 LRC 時間軸）',
+        editorPlaceholder: '[00:12.50]貼上或編輯 LRC 同步歌詞...',
+        cancelBtn: '取消',
+        applyLyricsBtn: '套用歌詞',
+        closeFullscreenBtn: '✕ 關閉大字歌詞',
+        settingsTitle: '⚙️ 程式設定',
+        langSectionTitle: '🌐 介面語言 / Language',
+        themeSectionTitle: '🎨 主題顏色',
+        resetAppearanceBtn: '↺ 重設預設外觀',
+        bgSectionTitle: '🖼️ 自訂背景圖片',
+        clearBgBtn: '清除背景圖片',
+        bgAppliedHint: '已套用並自動保存',
+        uploadBgBtn: '📁 匯入背景圖片',
+        bgDropHint: '支援按鈕匯入或拖放 JPG / PNG / WebP / GIF',
+        bgOpacityLabel: '圖片濃淡程度',
+        bgBlurLabel: '背景模糊度',
+        auddSectionTitle: '🎛️ 環境聽歌識曲引擎（AudD API Token）',
+        auddSectionDesc: '填入個人 AudD Token 或開啟公開 test 模式以進行聲紋比對；未命中或額度滿時會自動切換至 Gemini AI 兩階段聽寫查證。',
+        auddPlaceholder: '輸入您的 AudD API Token...',
+        saveBtn: '儲存',
+        auddTestLabel: '無個人 Token 時，啟用公開 test 測試金鑰模式',
+        translateBtn: '🌐 翻譯中文',
+        translatingBtn: '⏳ 翻譯中...',
+        hideTransBtn: '🌐 隱藏翻譯',
+        showTransBtn: '🌐 顯示翻譯',
+        translatePromptLang: '自然流暢、富有詩意的繁體中文（台灣慣用語）',
+        lyricModeSynced: '同步時間軸',
+        lyricModePlain: '純文字（無自動捲動）',
+        lyricModeNone: '無歌詞',
+        playingNow: '▶ 播放中',
+        playLabel: '播放',
+        themeInUse: '使用中',
+        toastLangChanged: '已切換介面語言為「繁體中文」',
+        themes: {
+          'dark': ['極致黑', '深邃黑底 · 霓虹青紫'],
+          'neon-pink': ['炫光粉', '深玫紅紫 · 炫光桃粉'],
+          'flame-orange': ['烈焰橘', '深暖炭底 · 烈焰琥珀'],
+          'baby-blue': ['寶寶藍', '粉藍淺底 · 深海藍字'],
+          'starry-blue': ['星空藍', '午夜銀河 · 微光星點'],
+          'magic-purple': ['魔幻紫', '深紫羅蘭 · 魔幻紫晶']
+        }
+      },
+      'zh-CN': {
+        htmlLang: 'zh-CN',
+        brandSub: '环境识别 · 歌词同步 · 跨平台音乐中心',
+        tabPlayer: '🎵 播放与同步歌词',
+        tabRecognize: '🎙️ 环境听歌识曲 & 跨平台搜索',
+        gearTooltip: '程序设置（语言、主题颜色、背景图片与识别引擎）',
+        crossSearchCurrent: '🔗 跨平台搜索此曲',
+        importLocalBtn: '＋ 导入本地音频 / .lrc',
+        prevTrack: '上一首',
+        playPause: '播放 / 暂停',
+        nextTrack: '下一首',
+        loopOff: '单曲循环：关闭',
+        loopOn: '单曲循环：开启',
+        syncedLyricsTitle: '📝 同步歌词',
+        searchLyricsBtn: '🔍 搜索歌词',
+        editLyricsBtn: '✏️ 编辑',
+        exportLrcBtn: '⬇ 导出 .lrc',
+        fullscreenLyricsBtn: '⛶ 大字歌词',
+        resetOffsetTitle: '点击将偏移量归零',
+        offsetPrefix: '偏移 ',
+        alignNowBtn: '📌 对齐当前时间',
+        alignNowTitle: '先点选要对齐的歌词行，再点此按钮一键校正时差',
+        playlistTitle: '📂 播放列表',
+        playlistHint: '支持拖放 MP3 / WAV / M4A / OGG / FLAC 与 .lrc 歌词文件；导入时将自动清洗文件名杂讯并智能拆解「歌手 - 歌名」。',
+        recTitle: '🎙️ 环境背景音乐识别',
+        recSub: '纯净收音管线 · AudD 声纹 + Gemini AI 双引擎',
+        sec8: '8秒', sec10: '10秒', sec15: '15秒',
+        startRecBtn: '开始听歌识曲',
+        stopRecBtn: '停止收音',
+        recIdleHint: '点击按钮并将麦克风靠近音源（已关闭语音降噪与回声消除）',
+        dbStrength: '收音强度 (dB)',
+        replayRecTitle: '🎧 重听刚刚录下的环境音',
+        replayRecSub: '确认收音是否清晰',
+        recResultTitle: '🎯 识别结果与候选比对',
+        transcriptLabel: '听写歌词片段 / 曲风特征（可直接微调重查）：',
+        transcriptPlaceholder: '输入或修正听到的歌词...',
+        recheckBtn: '重查曲库',
+        itunesTitle: '🌍 欧美与全球音乐搜索（iTunes 曲库）',
+        itunesSub: '支持欧美跨区整合去重与特殊字符，点击即可试听或加载播放器',
+        regionEUUS: '🌍 欧美跨区智能搜索 (US/GB/DE)',
+        regionUS: '🇺🇸 美国 (US)', regionGB: '🇬🇧 英国 (GB)', regionDE: '🇩🇪 德国 (DE)',
+        regionFR: '🇫🇷 法国 (FR)', regionSE: '🇸🇪 瑞典 (SE)', regionTW: '🇹🇼 台湾 (TW)', regionJP: '🇯🇵 日本 (JP)',
+        itunesPlaceholder: '输入歌名、歌手或环境音乐（如 Brian Eno, Coldplay, Sigur Rós）...',
+        searchBtn: '搜索',
+        itunesEmptyHint: '输入关键词或点击上方欧美快捷标签即可搜索并试听',
+        crossHubTitle: '🚀 跨平台音乐搜索中心',
+        crossHubSub: '一键跳转至 YouTube、YouTube Music、Apple Music、Spotify、KKBOX',
+        batchOpenBtn: '批量打开已勾选平台',
+        crossHubPlaceholder: '输入欲跨平台搜索的歌名或歌手...',
+        updateLinksBtn: '更新链接',
+        openPlatformBtn: '打开平台 ↗',
+        copyBtn: '复制',
+        lrcModalTitle: '🔍 搜索与挑选正确歌词（LRCLIB）',
+        lrcModalSub: '依歌曲时长自动优先排序最吻合的同步歌词',
+        songTitleLabel: '歌名',
+        songTitlePlaceholder: '输入歌名...',
+        artistLabel: '歌手（选填）',
+        artistPlaceholder: '输入歌手...',
+        lrcEmptyHint: '确认歌名与歌手后点击「搜索」',
+        editorModalTitle: '✏️ 编辑当前曲目歌词（支持 LRC 时间轴）',
+        editorPlaceholder: '[00:12.50]粘贴或编辑 LRC 同步歌词...',
+        cancelBtn: '取消',
+        applyLyricsBtn: '应用歌词',
+        closeFullscreenBtn: '✕ 关闭大字歌词',
+        settingsTitle: '⚙️ 程序设置',
+        langSectionTitle: '🌐 界面语言 / Language',
+        themeSectionTitle: '🎨 主题颜色',
+        resetAppearanceBtn: '↺ 重置默认外观',
+        bgSectionTitle: '🖼️ 自定义背景图片',
+        clearBgBtn: '清除背景图片',
+        bgAppliedHint: '已应用并自动保存',
+        uploadBgBtn: '📁 导入背景图片',
+        bgDropHint: '支持按钮导入或拖放 JPG / PNG / WebP / GIF',
+        bgOpacityLabel: '图片浓淡程度',
+        bgBlurLabel: '背景模糊度',
+        auddSectionTitle: '🎛️ 环境听歌识曲引擎（AudD API Token）',
+        auddSectionDesc: '填入个人 AudD Token 或开启公开 test 模式进行声纹比对；未命中或额度满时会自动切换至 Gemini AI 两阶段听写查证。',
+        auddPlaceholder: '输入您的 AudD API Token...',
+        saveBtn: '保存',
+        auddTestLabel: '无个人 Token 时，启用公开 test 测试密钥模式',
+        translateBtn: '🌐 翻译中文',
+        translatingBtn: '⏳ 翻译中...',
+        hideTransBtn: '🌐 隐藏翻译',
+        showTransBtn: '🌐 显示翻译',
+        translatePromptLang: '自然流畅、富有诗意的简体中文',
+        lyricModeSynced: '同步时间轴',
+        lyricModePlain: '纯文本（无自动滚动）',
+        lyricModeNone: '无歌词',
+        playingNow: '▶ 播放中',
+        playLabel: '播放',
+        themeInUse: '使用中',
+        toastLangChanged: '已切换界面语言为「简体中文」',
+        themes: {
+          'dark': ['极致黑', '深邃黑底 · 霓虹青紫'],
+          'neon-pink': ['炫光粉', '深玫红紫 · 炫光桃粉'],
+          'flame-orange': ['烈焰橘', '深暖炭底 · 烈焰琥珀'],
+          'baby-blue': ['宝宝蓝', '粉蓝浅底 · 深海蓝字'],
+          'starry-blue': ['星空蓝', '午夜银河 · 微光星点'],
+          'magic-purple': ['魔幻紫', '深紫罗兰 · 魔幻紫晶']
+        }
+      },
+      'en': {
+        htmlLang: 'en',
+        brandSub: 'Ambient Recognition · Synced Lyrics · Cross-Platform Hub',
+        tabPlayer: '🎵 Player & Lyrics',
+        tabRecognize: '🎙️ Recognize & Search',
+        gearTooltip: 'Settings (Language, Themes, Background & Engines)',
+        crossSearchCurrent: '🔗 Search Across Platforms',
+        importLocalBtn: '＋ Import Audio / .lrc',
+        prevTrack: 'Previous',
+        playPause: 'Play / Pause',
+        nextTrack: 'Next',
+        loopOff: 'Loop: Off',
+        loopOn: 'Loop: On',
+        syncedLyricsTitle: '📝 Synced Lyrics',
+        searchLyricsBtn: '🔍 Search Lyrics',
+        editLyricsBtn: '✏️ Edit',
+        exportLrcBtn: '⬇ Export .lrc',
+        fullscreenLyricsBtn: '⛶ Fullscreen',
+        resetOffsetTitle: 'Click to reset offset',
+        offsetPrefix: 'Offset ',
+        alignNowBtn: '📌 Align to Now',
+        alignNowTitle: 'Select a lyric line first, then click to align with current playback time',
+        playlistTitle: '📂 Playlist',
+        playlistHint: 'Drag & drop MP3 / WAV / M4A / OGG / FLAC or .lrc files. Filenames are automatically cleaned into "Artist - Title".',
+        recTitle: '🎙️ Ambient Music Recognition',
+        recSub: 'Clean Audio Capture · AudD Fingerprint + Gemini AI Dual Engine',
+        sec8: '8s', sec10: '10s', sec15: '15s',
+        startRecBtn: 'Start Listening',
+        stopRecBtn: 'Stop',
+        recIdleHint: 'Tap to listen near the audio source (voice noise suppression disabled)',
+        dbStrength: 'Input Level (dB)',
+        replayRecTitle: '🎧 Replay Recorded Clip',
+        replayRecSub: 'Verify audio clarity',
+        recResultTitle: '🎯 Recognition Results',
+        transcriptLabel: 'Heard Lyrics / Style Clues (editable for re-lookup):',
+        transcriptPlaceholder: 'Edit heard lyrics or keywords...',
+        recheckBtn: 'Re-check',
+        itunesTitle: '🌍 Global & US/EU Music Search (iTunes)',
+        itunesSub: 'Multi-region deduplicated search with 30s official previews',
+        regionEUUS: '🌍 US / UK / EU Combined',
+        regionUS: '🇺🇸 United States (US)', regionGB: '🇬🇧 United Kingdom (GB)', regionDE: '🇩🇪 Germany (DE)',
+        regionFR: '🇫🇷 France (FR)', regionSE: '🇸🇪 Sweden (SE)', regionTW: '🇹🇼 Taiwan (TW)', regionJP: '🇯🇵 Japan (JP)',
+        itunesPlaceholder: 'Search song, artist, or ambient (e.g., Brian Eno, Coldplay, Sigur Rós)...',
+        searchBtn: 'Search',
+        itunesEmptyHint: 'Enter keywords or click a quick tag above to search & preview',
+        crossHubTitle: '🚀 Cross-Platform Music Hub',
+        crossHubSub: 'Jump directly to YouTube, YouTube Music, Apple Music, Spotify, and KKBOX',
+        batchOpenBtn: 'Open Selected',
+        crossHubPlaceholder: 'Enter song or artist to search across platforms...',
+        updateLinksBtn: 'Update',
+        openPlatformBtn: 'Open ↗',
+        copyBtn: 'Copy',
+        lrcModalTitle: '🔍 Search & Pick Lyrics (LRCLIB)',
+        lrcModalSub: 'Prioritizes synced lyrics matching the current track duration',
+        songTitleLabel: 'Track Title',
+        songTitlePlaceholder: 'Enter track title...',
+        artistLabel: 'Artist (Optional)',
+        artistPlaceholder: 'Enter artist...',
+        lrcEmptyHint: 'Confirm title/artist and click "Search"',
+        editorModalTitle: '✏️ Edit Lyrics (LRC Supported)',
+        editorPlaceholder: '[00:12.50]Paste or edit synced LRC lyrics...',
+        cancelBtn: 'Cancel',
+        applyLyricsBtn: 'Apply Lyrics',
+        closeFullscreenBtn: '✕ Close Fullscreen',
+        settingsTitle: '⚙️ Settings',
+        langSectionTitle: '🌐 Interface Language',
+        themeSectionTitle: '🎨 Color Theme',
+        resetAppearanceBtn: '↺ Reset Defaults',
+        bgSectionTitle: '🖼️ Custom Background Image',
+        clearBgBtn: 'Clear Image',
+        bgAppliedHint: 'Applied & saved locally',
+        uploadBgBtn: '📁 Upload Image',
+        bgDropHint: 'Click or drag & drop JPG / PNG / WebP / GIF',
+        bgOpacityLabel: 'Image Opacity',
+        bgBlurLabel: 'Background Blur',
+        auddSectionTitle: '🎛️ Recognition Engine (AudD API Token)',
+        auddSectionDesc: 'Enter your AudD Token or enable public test mode for audio fingerprinting; falls back to Gemini AI automatically.',
+        auddPlaceholder: 'Enter your AudD API Token...',
+        saveBtn: 'Save',
+        auddTestLabel: 'Use public "test" token when personal token is empty',
+        translateBtn: '🌐 Translate (EN)',
+        translatingBtn: '⏳ Translating...',
+        hideTransBtn: '🌐 Hide Translation',
+        showTransBtn: '🌐 Show Translation',
+        translatePromptLang: 'natural, poetic English',
+        lyricModeSynced: 'Synced',
+        lyricModePlain: 'Plain Text',
+        lyricModeNone: 'No Lyrics',
+        playingNow: '▶ Playing',
+        playLabel: 'Play',
+        themeInUse: 'Active',
+        toastLangChanged: 'Interface language switched to English',
+        themes: {
+          'dark': ['Obsidian Dark', 'Deep Dark · Neon Cyan'],
+          'neon-pink': ['Neon Pink', 'Rose Night · Neon Pink'],
+          'flame-orange': ['Flame Orange', 'Warm Ember · Amber'],
+          'baby-blue': ['Baby Blue', 'Soft Sky · Deep Navy'],
+          'starry-blue': ['Starry Blue', 'Midnight Sky · Starlight'],
+          'magic-purple': ['Magic Purple', 'Deep Violet · Amethyst']
+        }
+      },
+      'ja': {
+        htmlLang: 'ja',
+        brandSub: '環境音認識 · 同期歌詞 · クロスプラットフォーム音楽ハブ',
+        tabPlayer: '🎵 再生と同期歌詞',
+        tabRecognize: '🎙️ 曲認識 & 検索',
+        gearTooltip: '設定（言語、テーマカラー、背景画像、認識エンジン）',
+        crossSearchCurrent: '🔗 各サービスで検索',
+        importLocalBtn: '＋ 音声 / .lrc を読込',
+        prevTrack: '前の曲',
+        playPause: '再生 / 一時停止',
+        nextTrack: '次の曲',
+        loopOff: '1曲リピート：オフ',
+        loopOn: '1曲リピート：オン',
+        syncedLyricsTitle: '📝 同期歌詞',
+        searchLyricsBtn: '🔍 歌詞を検索',
+        editLyricsBtn: '✏️ 編集',
+        exportLrcBtn: '⬇ .lrc 保存',
+        fullscreenLyricsBtn: '⛶ 全画面',
+        resetOffsetTitle: 'クリックしてオフセットをリセット',
+        offsetPrefix: 'ズレ ',
+        alignNowBtn: '📌 現在時刻に合わせる',
+        alignNowTitle: '歌詞行を選択してからクリックすると再生位置に合わせます',
+        playlistTitle: '📂 プレイリスト',
+        playlistHint: 'MP3 / WAV / M4A / OGG / FLAC や .lrc ファイルをドラッグ＆ドロップで追加できます。',
+        recTitle: '🎙️ 環境音の楽曲認識',
+        recSub: 'ピュア収音 · AudD フィンガープリント + Gemini AI デュアルエンジン',
+        sec8: '8秒', sec10: '10秒', sec15: '15秒',
+        startRecBtn: '曲を認識する',
+        stopRecBtn: '録音停止',
+        recIdleHint: 'ボタンを押して音源に近づけてください（ノイズ抑制オフ）',
+        dbStrength: '入力レベル (dB)',
+        replayRecTitle: '🎧 録音した環境音を確認',
+        replayRecSub: 'クリアに録れたか確認',
+        recResultTitle: '🎯 認識結果と候補',
+        transcriptLabel: '聞き取った歌詞・特徴（編集して再検索可能）：',
+        transcriptPlaceholder: '聞き取った歌詞やキーワードを入力...',
+        recheckBtn: '再検索',
+        itunesTitle: '🌍 欧米・グローバル音楽検索（iTunes）',
+        itunesSub: 'US/UK/EU 統合検索と30秒公式試聴に対応',
+        regionEUUS: '🌍 欧米統合検索 (US/GB/DE)',
+        regionUS: '🇺🇸 アメリカ (US)', regionGB: '🇬🇧 イギリス (GB)', regionDE: '🇩🇪 ドイツ (DE)',
+        regionFR: '🇫🇷 フランス (FR)', regionSE: '🇸🇪 スウェーデン (SE)', regionTW: '🇹🇼 台湾 (TW)', regionJP: '🇯🇵 日本 (JP)',
+        itunesPlaceholder: '曲名・アーティスト・アンビエントを検索（例：Brian Eno, Coldplay）...',
+        searchBtn: '検索',
+        itunesEmptyHint: 'キーワードを入力するか上のタグから検索・試聴できます',
+        crossHubTitle: '🚀 クロスプラットフォーム検索',
+        crossHubSub: 'YouTube・YouTube Music・Apple Music・Spotify・KKBOX へワンクリック移動',
+        batchOpenBtn: '選択先をまとめて開く',
+        crossHubPlaceholder: '検索したい曲名やアーティスト名を入力...',
+        updateLinksBtn: '更新',
+        openPlatformBtn: '開く ↗',
+        copyBtn: 'コピー',
+        lrcModalTitle: '🔍 歌詞を検索して適用（LRCLIB）',
+        lrcModalSub: '再生時間に近い同期歌詞を優先表示します',
+        songTitleLabel: '曲名',
+        songTitlePlaceholder: '曲名を入力...',
+        artistLabel: 'アーティスト（任意）',
+        artistPlaceholder: 'アーティスト名を入力...',
+        lrcEmptyHint: '曲名・アーティスト名を確認して「検索」をクリック',
+        editorModalTitle: '✏️ 歌詞を編集（LRC タイムスタンプ対応）',
+        editorPlaceholder: '[00:12.50]LRC 同期歌詞を貼り付けまたは編集...',
+        cancelBtn: 'キャンセル',
+        applyLyricsBtn: '歌詞を適用',
+        closeFullscreenBtn: '✕ 全画面を閉じる',
+        settingsTitle: '⚙️ 設定',
+        langSectionTitle: '🌐 表示言語 / Language',
+        themeSectionTitle: '🎨 テーマカラー',
+        resetAppearanceBtn: '↺ デフォルトに戻す',
+        bgSectionTitle: '🖼️ カスタム背景画像',
+        clearBgBtn: '背景を削除',
+        bgAppliedHint: '適用・自動保存済み',
+        uploadBgBtn: '📁 画像を選択',
+        bgDropHint: 'クリックまたはドラッグ＆ドロップ（JPG / PNG / WebP / GIF）',
+        bgOpacityLabel: '画像の濃さ',
+        bgBlurLabel: '背景のぼかし',
+        auddSectionTitle: '🎛️ 楽曲認識エンジン（AudD API Token）',
+        auddSectionDesc: 'AudD Token を入力するか test モードを有効にすると音声指紋で照合します。未一致時は Gemini AI に自動切替します。',
+        auddPlaceholder: 'AudD API Token を入力...',
+        saveBtn: '保存',
+        auddTestLabel: 'Token 未入力時に公開 test モードを使用する',
+        translateBtn: '🌐 日本語に翻訳',
+        translatingBtn: '⏳ 翻訳中...',
+        hideTransBtn: '🌐 翻訳を隠す',
+        showTransBtn: '🌐 翻訳を表示',
+        translatePromptLang: '自然で美しい日本語',
+        lyricModeSynced: '同期タイムライン',
+        lyricModePlain: 'テキストのみ',
+        lyricModeNone: '歌詞なし',
+        playingNow: '▶ 再生中',
+        playLabel: '再生',
+        themeInUse: '使用中',
+        toastLangChanged: '表示言語を「日本語」に切り替えました',
+        themes: {
+          'dark': ['ダーク', 'ディープダーク · ネオンシアン'],
+          'neon-pink': ['ネオンピンク', 'ローズナイト · ネオンピンク'],
+          'flame-orange': ['フレイムオレンジ', 'ウォームダーク · アンバー'],
+          'baby-blue': ['ベイビーブルー', 'パステルブルー · ネイビー文字'],
+          'starry-blue': ['スターリーブルー', 'ミッドナイト · 星空'],
+          'magic-purple': ['マジックパープル', 'ディープバイオレット · 魔法紫']
+        }
+      }
+    };
+
+    const THEMES = [
+      { id: 'dark',         name: '極致黑', desc: '深邃黑底 · 霓虹青紫', dot: '#38bdf8', preview: 'linear-gradient(135deg,#090d16,#1e1b4b,#38bdf8)', viz: ['#38bdf8','#818cf8','#a855f7'] },
+      { id: 'neon-pink',    name: '炫光粉', desc: '深玫紅紫 · 炫光桃粉', dot: '#f472b6', preview: 'linear-gradient(135deg,#23061a,#be185d,#f472b6)', viz: ['#f472b6','#fb7185','#e879f9'] },
+      { id: 'flame-orange', name: '烈焰橘', desc: '深暖炭底 · 烈焰琥珀', dot: '#fb923c', preview: 'linear-gradient(135deg,#1c0b05,#ea580c,#fbbf24)', viz: ['#fb923c','#ef4444','#f59e0b'] },
+      { id: 'baby-blue',    name: '寶寶藍', desc: '粉藍淺底 · 深海藍字', dot: '#0284c7', preview: 'linear-gradient(135deg,#e0f2fe,#7dd3fc,#0284c7)', viz: ['#0284c7','#2563eb','#06b6d4'] },
+      { id: 'starry-blue',  name: '星空藍', desc: '午夜銀河 · 微光星點', dot: '#60a5fa', preview: 'linear-gradient(135deg,#030714,#1d4ed8,#60a5fa)', viz: ['#60a5fa','#38bdf8','#818cf8'] },
+      { id: 'magic-purple', name: '魔幻紫', desc: '深紫羅蘭 · 魔幻紫晶', dot: '#c084fc', preview: 'linear-gradient(135deg,#0d041c,#7e22ce,#e879f9)', viz: ['#c084fc','#a855f7','#e879f9'] }
+    ];
+
+    const state = {
+      tracks: [],
+      currentIndex: 0,
+      isLooping: false,
+      lyricOffset: 0,
+      parsedLyrics: [],
+      isSyncedLyrics: false,
+      activeLyricIdx: -1,
+      selectedLyricIdx: -1,
+      showTranslation: false,
+      isTranslating: false,
+      translationCache: {},
+      currentTranslations: null,
+      lrcCandidates: [],
+      itunesResults: [],
+      recCandidates: [],
+      recordDuration: 10,
+      isRecording: false,
+      auddToken: safeGetLS('sa_audd_token', ''),
+      auddUseTest: safeGetLS('sa_audd_test', 'true') === 'true',
+      selectedPlatforms: new Set(['youtube', 'ytmusic', 'applemusic', 'spotify', 'kkbox']),
+      lang: safeGetLS('sa_lang', 'zh-TW'),
+      themeId: safeGetLS('sa_theme', 'dark'),
+      bgOpacity: parseInt(safeGetLS('sa_bg_opacity', '45'), 10),
+      bgBlur: parseInt(safeGetLS('sa_bg_blur', '2'), 10),
+      bgImageUrl: null,
+      bgImageName: safeGetLS('sa_bg_name', '')
+    };
+
+    function t(key) {
+      const dict = I18N[state.lang] || I18N['zh-TW'];
+      return dict[key] !== undefined ? dict[key] : (I18N['zh-TW'][key] || key);
+    }
+
+    function applyLanguage(lang, notify) {
+      if (!I18N[lang]) lang = 'zh-TW';
+      state.lang = lang;
+      safeSetLS('sa_lang', lang);
+      document.documentElement.lang = I18N[lang].htmlLang;
+
+      document.querySelectorAll('#langGrid .lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) el.textContent = t(key);
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (key) el.setAttribute('placeholder', t(key));
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (key) el.setAttribute('title', t(key));
+      });
+
+      // 依目前語系更新動態文字與快取翻譯
+      const themeInfo = (I18N[lang].themes && I18N[lang].themes[state.themeId]) || ['極致黑', ''];
+      const badgeEl = document.getElementById('currentThemeBadge');
+      if (badgeEl) badgeEl.textContent = themeInfo[0];
+
+      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
+      state.currentTranslations = cacheKey && state.translationCache[cacheKey]
+        ? state.translationCache[cacheKey]
+        : null;
+      if (!state.currentTranslations) state.showTranslation = false;
+
+      const modeBadge = document.getElementById('lyricModeBadge');
+      if (modeBadge) {
+        modeBadge.textContent = state.isSyncedLyrics
+          ? t('lyricModeSynced')
+          : (state.parsedLyrics.length ? t('lyricModePlain') : t('lyricModeNone'));
+      }
+
+      updateOffsetLabel();
+      updateTranslateButtons();
+      renderThemeGrid();
+      if (state.tracks.length) renderPlaylist();
+      renderPlatformCards();
+      if (state.parsedLyrics.length) renderLyricsDOM(false);
+
+      if (notify) showToast(t('toastLangChanged'));
+    }
+
+    let audio = null;
+    let previewAudio = null;
+    let toastTimer = null;
+    let lyricRafId = null;
+
+    function showToast(msg) {
+      const el = document.getElementById('toastEl');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+    }
+
+    function formatTime(sec) {
+      if (!isFinite(sec) || sec < 0) return '00:00';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, function(s) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s];
+      });
+    }
+
+    /* ========================================================================
+       3. 分頁切換
+       ======================================================================== */
+    function switchTab(tab) {
+      const isPlayer = tab === 'player';
+      document.getElementById('viewPlayer').classList.toggle('hidden', !isPlayer);
+      document.getElementById('viewRecognize').classList.toggle('hidden', isPlayer);
+      document.getElementById('tabBtnPlayer').classList.toggle('active', isPlayer);
+      document.getElementById('tabBtnRecognize').classList.toggle('active', !isPlayer);
+    }
+
+    /* ========================================================================
+       4. 檔名清洗與歌手／歌名拆解
+       ======================================================================== */
+    function parseAudioFilename(filename) {
+      let name = String(filename || '');
+      name = name.replace(/\.[^/.]+$/, '');
+      name = name.replace(/^\s*\d{1,3}\s*[-._)]\s*/, '');
+      name = name.replace(/[\(\[\【\{][^)\]\】\}]*?(official|video|mv|m\/v|lyrics|lyric|audio|hd|hq|4k|320\s*kbps|flac|mp3|live|ver\.?|version|官方|歌詞|高音質|無損|完整版)[^)\]\】\}]*?[\)\]\】\}]/gi, '');
+      name = name.replace(/\b(320kbps|128kbps|flac|hq|hd|mv)\b/gi, '');
+      name = name.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+
+      const sepMatch = name.match(/^(.+?)\s+[-–—]\s+(.+)$/);
+      if (sepMatch) {
+        return { artist: sepMatch[1].trim(), title: sepMatch[2].trim() };
+      }
+      return { artist: '', title: name || '未知曲目' };
+    }
+
+    /* ========================================================================
+       5. 內建 3 首 Web Audio 離線合成 WAV 示範曲目（免外部音源）
+       ======================================================================== */
+    function createSynthWavUrl(notes, tempoSec, wave) {
+      try {
+        const sampleRate = 22050;
+        const totalSec = notes.length * tempoSec + 0.5;
+        const numSamples = Math.floor(sampleRate * totalSec);
+        const buffer = new ArrayBuffer(44 + numSamples * 2);
+        const view = new DataView(buffer);
+
+        const writeStr = (off, str) => {
+          for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i));
+        };
+        writeStr(0, 'RIFF');
+        view.setUint32(4, 36 + numSamples * 2, true);
+        writeStr(8, 'WAVE');
+        writeStr(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeStr(36, 'data');
+        view.setUint32(40, numSamples * 2, true);
+
+        for (let i = 0; i < numSamples; i++) {
+          const t = i / sampleRate;
+          const noteIdx = Math.floor(t / tempoSec);
+          const freq = notes[noteIdx] || 0;
+          let sample = 0;
+          if (freq > 0) {
+            const localT = t - noteIdx * tempoSec;
+            const env = Math.min(1, localT * 20) * Math.exp(-localT * 2.4);
+            const phase = 2 * Math.PI * freq * t;
+            sample = wave === 'triangle'
+              ? (2 / Math.PI) * Math.asin(Math.sin(phase)) * 0.34 * env
+              : (Math.sin(phase) * 0.28 + Math.sin(phase * 2) * 0.07) * env;
+          }
+          view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, sample)) * 32767, true);
+        }
+        return URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' }));
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function initDemoTracks() {
+      state.tracks = [
+        {
+          title: 'Starlight Drift (示範曲)',
+          artist: 'SonicAura Ambient',
+          source: '內建合成示範曲 · 英文',
+          url: createSynthWavUrl([261.6, 329.6, 392.0, 523.3, 493.9, 392.0, 329.6, 293.7, 261.6, 329.6, 392.0, 440.0, 392.0, 329.6, 261.6, 261.6], 0.85, 'sine'),
+          lrc: `[00:00.00]Drifting softly through the velvet night
+[00:02.60]Silver echoes dancing in the starlight
+[00:05.20]Every heartbeat whispers like a quiet song
+[00:08.00]Hold this fleeting moment till the dawn
+[00:10.80]Click the translate button to feel the melody in Chinese`
+        },
+        {
+          title: 'Midnight Neon Pulse (示範曲)',
+          artist: 'SonicAura Synthwave',
+          source: '內建合成示範曲 · 日文',
+          url: createSynthWavUrl([220, 261.6, 329.6, 440, 392, 329.6, 293.7, 261.6, 220, 261.6, 329.6, 392, 329.6, 293.7, 220, 220], 0.65, 'triangle'),
+          lrc: `[00:00.00]真夜中のネオンが静かに揺れる
+[00:02.10]眠らない街に響くメロディ
+[00:04.40]遠い記憶の光を追いかけながら
+[00:06.80]今夜だけはこのリズムに身を任せて
+[00:09.10]明日へと続く新しい風を感じよう`
+        },
+        {
+          title: 'Morning Mist Piano (示範曲)',
+          artist: 'SonicAura Lo-Fi',
+          source: '內建合成示範曲 · 中文',
+          url: createSynthWavUrl([293.7, 369.9, 440.0, 587.3, 554.4, 440.0, 369.9, 329.6, 293.7, 369.9, 440.0, 493.9, 440.0, 369.9, 293.7, 293.7], 0.8, 'sine'),
+          lrc: `[00:00.00]晨霧微光灑落桌面
+[00:02.60]切換至「環境聽歌識曲 & 跨平台搜尋」分頁
+[00:05.20]支援純淨收音、AudD 聲紋與 Gemini AI 雙引擎辨識
+[00:08.00]並支援歐美跨區搜尋與五大音樂平台直達`
+        }
+      ];
+      renderPlaylist();
+      loadTrack(0, false);
+    }
+
+    /* ========================================================================
+       6. 播放器控制與本地檔案匯入
+       ======================================================================== */
+    function renderPlaylist() {
+      const container = document.getElementById('playlistContainer');
+      document.getElementById('playlistCount').textContent = state.tracks.length;
+      container.innerHTML = state.tracks.map((track, idx) => {
+        const active = idx === state.currentIndex;
+        return `
+          <button type="button" class="track-item ${active ? 'active' : ''}" onclick="loadTrack(${idx}, true)">
+            <div class="track-item-info">
+              <p class="track-item-title">${escapeHtml(track.title)}</p>
+              <p class="track-item-sub">${escapeHtml(track.artist || '未知歌手')} · ${escapeHtml(track.source || '本地檔案')}</p>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:${active ? 'var(--accent)' : 'var(--text-muted)'}; flex-shrink:0;">
+              ${active ? t('playingNow') : t('playLabel')}
+            </span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function loadTrack(idx, autoPlay) {
+      if (idx < 0 || idx >= state.tracks.length) return;
+      state.currentIndex = idx;
+      state.lyricOffset = 0;
+      state.selectedLyricIdx = -1;
+      updateOffsetLabel();
+
+      const track = state.tracks[idx];
+      audio.src = track.url || '';
+      document.getElementById('trackTitle').textContent = track.title;
+      document.getElementById('trackArtist').textContent = track.artist || '未知歌手';
+      document.getElementById('trackSourceBadge').textContent = track.source || '音訊曲目';
+
+      const img = document.getElementById('trackCoverImg');
+      const fallback = document.getElementById('trackCoverFallback');
+      if (track.cover) {
+        img.src = track.cover;
+        img.classList.remove('hidden');
+        fallback.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        fallback.classList.remove('hidden');
+      }
+
+      if (track.lrc) {
+        parseAndRenderLyrics(track.lrc, '🎯 點擊歌詞跳轉進度，或使用下方微調校正');
+      } else {
+        parseAndRenderLyrics('', '尚未載入歌詞，請點「🔍 搜尋歌詞」挑選最吻合版本或匯入 .lrc');
+      }
+
+      renderPlaylist();
+      if (autoPlay && track.url) {
+        try { previewAudio.pause(); } catch (e) {}
+        audio.play().catch(() => {});
+      }
+    }
+
+    function togglePlay() {
+      if (!audio || !audio.src) return;
+      if (audio.paused) {
+        try { previewAudio.pause(); } catch (e) {}
+        audio.play().catch(() => showToast('請先點擊頁面以允許瀏覽器播放音訊'));
+      } else {
+        audio.pause();
+      }
+    }
+
+    function prevTrack() {
+      if (!state.tracks.length) return;
+      loadTrack((state.currentIndex - 1 + state.tracks.length) % state.tracks.length, true);
+    }
+
+    function nextTrack() {
+      if (!state.tracks.length) return;
+      loadTrack((state.currentIndex + 1) % state.tracks.length, true);
+    }
+
+    function toggleLoop() {
+      state.isLooping = !state.isLooping;
+      audio.loop = state.isLooping;
+      const btn = document.getElementById('loopBtn');
+      btn.classList.toggle('btn-active', state.isLooping);
+      btn.title = state.isLooping ? '單曲循環：開啟' : '單曲循環：關閉';
+      showToast(state.isLooping ? '已開啟單曲循環' : '已關閉單曲循環');
+    }
+
+    function handleLocalFiles(files) {
+      const list = Array.from(files || []);
+      const lrcFiles = list.filter(f => /\.lrc$/i.test(f.name));
+      const audioFiles = list.filter(f => /\.(mp3|wav|m4a|ogg|flac)$/i.test(f.name) || (f.type && f.type.startsWith('audio/')));
+
+      audioFiles.forEach(file => {
+        const parsed = parseAudioFilename(file.name);
+        state.tracks.push({
+          title: parsed.title,
+          artist: parsed.artist,
+          source: '本地匯入',
+          url: URL.createObjectURL(file),
+          lrc: ''
+        });
+      });
+
+      lrcFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target.result || '';
+          const curTrack = state.tracks[state.currentIndex];
+          if (curTrack) {
+            curTrack.lrc = text;
+            parseAndRenderLyrics(text, '已匯入本地歌詞檔：' + file.name);
+            showToast('已載入歌詞檔 ' + file.name);
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      if (audioFiles.length > 0) {
+        renderPlaylist();
+        loadTrack(state.tracks.length - 1, true);
+        showToast('已匯入 ' + audioFiles.length + ' 首本地音訊（可點「🔍 搜尋歌詞」挑選同步歌詞）');
+      }
+    }
+
+    /* ========================================================================
+       7. 嚴格容器內捲動（絕不使用 scrollIntoView）與精準 LRC 時間軸引擎
+       ======================================================================== */
+    function scrollContainerToElement(container, el) {
+      if (!container || !el) return;
+      const targetTop = Math.max(0, el.offsetTop - (container.clientHeight / 2) + (el.offsetHeight / 2));
+      container.scrollTo({ top: targetTop, behavior: 'smooth' });
+    }
+
+    function parseAndRenderLyrics(lrcText, statusMsg) {
+      document.getElementById('lyricStatusText').textContent = statusMsg || '🎯 點擊歌詞跳轉進度';
+      const lines = String(lrcText || '').split(/\r?\n/);
+      const timed = [];
+      const plain = [];
+      const timeReg = /\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g;
+
+      lines.forEach(raw => {
+        const matches = [...raw.matchAll(timeReg)];
+        const text = raw.replace(timeReg, '').trim();
+        if (matches.length > 0) {
+          if (!text) return;
+          matches.forEach(m => {
+            const min = parseInt(m[1], 10);
+            const sec = parseInt(m[2], 10);
+            // [mm:ss.xx] -> /100；[mm:ss.xxx] -> /1000
+            const frac = m[3] ? parseInt(m[3], 10) / Math.pow(10, m[3].length) : 0;
+            timed.push({ time: min * 60 + sec + frac, text });
+          });
+        } else if (text && !/^\[(ar|ti|al|by|offset|length):/i.test(raw.trim())) {
+          plain.push({ time: -1, text });
+        }
+      });
+
+      const modeBadge = document.getElementById('lyricModeBadge');
+      if (timed.length > 0) {
+        timed.sort((a, b) => a.time - b.time);
+        state.parsedLyrics = timed;
+        state.isSyncedLyrics = true;
+        modeBadge.textContent = t('lyricModeSynced');
+        modeBadge.className = 'badge';
+      } else {
+        state.parsedLyrics = plain;
+        state.isSyncedLyrics = false;
+        modeBadge.textContent = plain.length ? t('lyricModePlain') : t('lyricModeNone');
+        modeBadge.className = 'badge badge-muted';
+      }
+
+      state.activeLyricIdx = -1;
+      state.selectedLyricIdx = -1;
+      state.showTranslation = false;
+
+      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
+      state.currentTranslations = cacheKey && state.translationCache[cacheKey]
+        ? state.translationCache[cacheKey]
+        : null;
+
+      updateTranslateButtons();
+      renderLyricsDOM(true);
+
+      if (state.isSyncedLyrics) syncLyricsHighlight(audio.currentTime || 0, true);
+    }
+
+    function getLyricsCacheKey(lines) {
+      if (!Array.isArray(lines) || !lines.length) return '';
+      return state.lang + '::' + lines.map(l => l.text).join('\n');
+    }
+
+    function renderLyricsDOM(resetScroll) {
+      const box = document.getElementById('lyricsContainer');
+      const immBox = document.getElementById('immersiveLyricsBody');
+
+      if (!state.parsedLyrics.length) {
+        box.innerHTML = '<p class="lyrics-status" style="padding:52px 0;">尚無歌詞，請點上方「🔍 搜尋歌詞」挑選正確版本，或匯入 .lrc 檔案。</p>';
+        immBox.innerHTML = '<p class="lyrics-status" style="padding:60px 0; font-size:16px;">目前曲目尚無歌詞</p>';
+        return;
+      }
+
+      const noticeHtml = !state.isSyncedLyrics
+        ? '<p class="lyrics-status" style="margin-bottom:10px; color:var(--accent);">ℹ️ 此歌詞無時間軸標籤，已停用自動捲動，請手動滑動閱讀。</p>'
+        : '';
+
+      const canShowTrans = state.showTranslation && Array.isArray(state.currentTranslations);
+
+      box.innerHTML = noticeHtml + state.parsedLyrics.map((item, i) => {
+        const activeCls = i === state.activeLyricIdx ? ' active' : '';
+        const selectedCls = i === state.selectedLyricIdx ? ' selected-line' : '';
+        const transText = canShowTrans ? (state.currentTranslations[i] || '') : '';
+        return `
+          <p data-lrc-idx="${i}" class="lyric-line${activeCls}${selectedCls}" onclick="onLyricLineClick(${i})">
+            <span class="lyric-orig">${item.time >= 0 ? `<span class="lyric-ts">${formatTime(item.time)}</span>` : ''}${escapeHtml(item.text)}</span>
+            ${transText ? `<span class="lyric-trans">${escapeHtml(transText)}</span>` : ''}
+          </p>
+        `;
+      }).join('');
+
+      immBox.innerHTML = noticeHtml + state.parsedLyrics.map((item, i) => {
+        const activeCls = i === state.activeLyricIdx ? ' active' : '';
+        const transText = canShowTrans ? (state.currentTranslations[i] || '') : '';
+        return `
+          <p data-imm-idx="${i}" class="lyric-line${activeCls}" onclick="onLyricLineClick(${i})">
+            <span class="lyric-orig">${escapeHtml(item.text)}</span>
+            ${transText ? `<span class="lyric-trans">${escapeHtml(transText)}</span>` : ''}
+          </p>
+        `;
+      }).join('');
+
+      if (resetScroll) {
+        box.scrollTop = 0;
+        immBox.scrollTop = 0;
+      } else if (state.isSyncedLyrics && state.activeLyricIdx >= 0) {
+        const activeEl = box.querySelector(`[data-lrc-idx="${state.activeLyricIdx}"]`);
+        if (activeEl) scrollContainerToElement(box, activeEl);
+        const isImmOpen = !document.getElementById('immersiveModal').classList.contains('hidden');
+        if (isImmOpen) {
+          const immActiveEl = immBox.querySelector(`[data-imm-idx="${state.activeLyricIdx}"]`);
+          if (immActiveEl) scrollContainerToElement(immBox, immActiveEl);
+        }
+      }
+    }
+
+    function updateTranslateButtons() {
+      const btns = [
+        document.getElementById('translateLyricsBtn'),
+        document.getElementById('immersiveTranslateBtn')
+      ].filter(Boolean);
+
+      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
+      const hasCached = Boolean(cacheKey && state.translationCache[cacheKey]);
+
+      btns.forEach(btn => {
+        if (state.isTranslating) {
+          btn.textContent = t('translatingBtn');
+          btn.disabled = true;
+          btn.classList.add('btn-active');
+        } else if (state.showTranslation) {
+          btn.textContent = t('hideTransBtn');
+          btn.disabled = false;
+          btn.classList.add('btn-active');
+        } else if (hasCached) {
+          btn.textContent = t('showTransBtn');
+          btn.disabled = false;
+          btn.classList.remove('btn-active');
+        } else {
+          btn.textContent = t('translateBtn');
+          btn.disabled = false;
+          btn.classList.remove('btn-active');
+        }
+      });
+    }
+
+    async function toggleLyricsTranslation() {
+      if (state.isTranslating) return;
+      if (!state.parsedLyrics || !state.parsedLyrics.length) {
+        return showToast('目前曲目尚無歌詞可翻譯');
+      }
+
+      if (state.showTranslation) {
+        state.showTranslation = false;
+        updateTranslateButtons();
+        renderLyricsDOM(false);
+        return;
+      }
+
+      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
+      if (state.translationCache[cacheKey]) {
+        state.currentTranslations = state.translationCache[cacheKey];
+        state.showTranslation = true;
+        updateTranslateButtons();
+        renderLyricsDOM(false);
+        return;
+      }
+
+      state.isTranslating = true;
+      updateTranslateButtons();
+      showToast('正在透過 AI 逐行翻譯歌詞為繁體中文...');
+
+      try {
+        const sourceLines = state.parsedLyrics.map(l => l.text);
+        const targetLangDesc = t('translatePromptLang');
+        const apiKey = '';
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
+
+        const payload = {
+          systemInstruction: {
+            parts: [{
+              text: 'You are a professional music lyric translator. Translate each line of the input string array into ' + targetLangDesc + '. If a line is already in the target language, keep it natural and concise. The output JSON string array MUST have the exact same length as the input array, matching line-by-line.'
+            }]
+          },
+          contents: [{
+            parts: [{
+              text: 'Translate the following ' + sourceLines.length + ' lines into ' + targetLangDesc + ' and return a JSON string array of the exact same length:\n' + JSON.stringify(sourceLines)
+            }]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'ARRAY',
+              items: { type: 'STRING' }
+            }
+          }
+        };
+
+        const res = await fetchWithRetry(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }, 3);
+
+        const data = await res.json();
+        const rawJson = data && data.candidates && data.candidates[0] &&
+          data.candidates[0].content && data.candidates[0].content.parts &&
+          data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+
+        if (!rawJson) throw new Error('Empty translation response');
+
+        const parsed = JSON.parse(rawJson);
+        if (!Array.isArray(parsed)) throw new Error('Invalid translation array');
+
+        const aligned = sourceLines.map((_, idx) => {
+          const t = parsed[idx];
+          return typeof t === 'string' ? t.trim() : '';
+        });
+
+        state.translationCache[cacheKey] = aligned;
+
+        if (getLyricsCacheKey(state.parsedLyrics) === cacheKey) {
+          state.currentTranslations = aligned;
+          state.showTranslation = true;
+          renderLyricsDOM(false);
+          showToast('歌詞翻譯完成！已切換為雙語同步顯示');
+        }
+      } catch (err) {
+        showToast('翻譯歌詞時發生錯誤，請稍後再試');
+      } finally {
+        state.isTranslating = false;
+        updateTranslateButtons();
+      }
+    }
+
+    function onLyricLineClick(idx) {
+      const item = state.parsedLyrics[idx];
+      if (!item) return;
+      state.selectedLyricIdx = idx;
+      document.querySelectorAll('#lyricsContainer .lyric-line').forEach((el, i) => {
+        el.classList.toggle('selected-line', i === idx);
+      });
+      if (state.isSyncedLyrics && item.time >= 0 && isFinite(audio.duration)) {
+        audio.currentTime = Math.max(0, Math.min(audio.duration, item.time - state.lyricOffset));
+        syncLyricsHighlight(audio.currentTime, true);
+        if (audio.paused) audio.play().catch(() => {});
+      }
+    }
+
+    function syncLyricsHighlight(currentTime, forceScroll) {
+      if (!state.isSyncedLyrics || !state.parsedLyrics.length) return;
+      const effectiveTime = currentTime + state.lyricOffset;
+      let activeIdx = -1;
+      for (let i = 0; i < state.parsedLyrics.length; i++) {
+        if (state.parsedLyrics[i].time <= effectiveTime) {
+          activeIdx = i;
+        } else {
+          break;
+        }
+      }
+      if (activeIdx === state.activeLyricIdx && !forceScroll) return;
+      state.activeLyricIdx = activeIdx;
+
+      const box = document.getElementById('lyricsContainer');
+      const immBox = document.getElementById('immersiveLyricsBody');
+      const isImmOpen = !document.getElementById('immersiveModal').classList.contains('hidden');
+
+      box.querySelectorAll('.lyric-line').forEach((el, idx) => {
+        el.classList.toggle('active', idx === activeIdx);
+        if (idx === activeIdx) scrollContainerToElement(box, el);
+      });
+      immBox.querySelectorAll('.lyric-line').forEach((el, idx) => {
+        el.classList.toggle('active', idx === activeIdx);
+        if (idx === activeIdx && isImmOpen) scrollContainerToElement(immBox, el);
+      });
+    }
+
+    function startLyricSyncLoop() {
+      cancelAnimationFrame(lyricRafId);
+      const tick = () => {
+        if (audio && !audio.paused && !audio.ended) {
+          syncLyricsHighlight(audio.currentTime || 0, false);
+          lyricRafId = requestAnimationFrame(tick);
+        }
+      };
+      lyricRafId = requestAnimationFrame(tick);
+    }
+
+    function updateOffsetLabel() {
+      const v = state.lyricOffset;
+      const el = document.getElementById('lyricOffsetBtn');
+      if (el) el.textContent = t('offsetPrefix') + (v >= 0 ? '+' : '') + v.toFixed(1) + 's';
+    }
+
+    function adjustLyricOffset(delta) {
+      state.lyricOffset = Math.round((state.lyricOffset + delta) * 10) / 10;
+      updateOffsetLabel();
+      syncLyricsHighlight(audio.currentTime || 0, true);
+    }
+
+    function resetLyricOffset() {
+      state.lyricOffset = 0;
+      updateOffsetLabel();
+      syncLyricsHighlight(audio.currentTime || 0, true);
+      showToast('已將歌詞偏移量歸零');
+    }
+
+    function alignSelectedLineToNow() {
+      if (!state.isSyncedLyrics) return showToast('目前為純文字歌詞，無時間軸可對齊');
+      const idx = state.selectedLyricIdx >= 0 ? state.selectedLyricIdx : state.activeLyricIdx;
+      if (idx < 0 || !state.parsedLyrics[idx]) {
+        return showToast('請先點選一句要對齊的歌詞，再按「📌 對齊目前時間」');
+      }
+      const now = audio.currentTime || 0;
+      state.lyricOffset = Math.round((state.parsedLyrics[idx].time - now) * 10) / 10;
+      updateOffsetLabel();
+      syncLyricsHighlight(now, true);
+      showToast('已對齊第 ' + (idx + 1) + ' 句歌詞（偏移 ' + (state.lyricOffset >= 0 ? '+' : '') + state.lyricOffset.toFixed(1) + 's）');
+    }
+
+    /* ========================================================================
+       8. LRCLIB 互動歌詞搜尋與挑選視窗
+       ======================================================================== */
+    function openLyricsSearchModal() {
+      const track = state.tracks[state.currentIndex];
+      const titleInput = document.getElementById('lrcSearchTitle');
+      const artistInput = document.getElementById('lrcSearchArtist');
+      if (track) {
+        titleInput.value = track.title.replace(/\(示範曲\)/g, '').trim();
+        artistInput.value = (track.artist && track.artist !== '未知歌手') ? track.artist : '';
+      }
+      const dur = audio ? audio.duration : NaN;
+      document.getElementById('lrcTargetDurationHint').textContent = isFinite(dur) && dur > 0
+        ? '目前歌曲時長：' + formatTime(dur) + '（將優先排序誤差 ≤ 5 秒且具同步時間軸的版本）'
+        : '將優先排序具同步時間軸的歌詞版本';
+      document.getElementById('lyricsSearchModal').classList.remove('hidden');
+      if (titleInput.value.trim()) executeLrclibSearch();
+    }
+
+    function closeLyricsSearchModal() {
+      document.getElementById('lyricsSearchModal').classList.add('hidden');
+    }
+
+    async function executeLrclibSearch() {
+      const title = document.getElementById('lrcSearchTitle').value.trim();
+      const artist = document.getElementById('lrcSearchArtist').value.trim();
+      if (!title && !artist) return showToast('請至少輸入歌名或歌手');
+
+      const box = document.getElementById('lrcSearchResultsList');
+      box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:24px 0;">正在向 LRCLIB 搜尋候選歌詞...</p>';
+
+      try {
+        const q = (title + ' ' + artist).trim();
+        const res = await fetch('https://lrclib.net/api/search?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:24px 0;">查無相符歌詞，請嘗試縮短歌名或移除括號字樣後重試。</p>';
+          return;
+        }
+
+        const targetDur = isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null;
+        const scored = data.map(item => {
+          const hasSynced = Boolean(item.syncedLyrics && item.syncedLyrics.trim());
+          const durDiff = (targetDur !== null && typeof item.duration === 'number')
+            ? Math.abs(item.duration - targetDur)
+            : 9999;
+          const isDurationMatch = durDiff <= 5;
+          return { ...item, hasSynced, durDiff, isDurationMatch };
+        }).sort((a, b) => {
+          if (a.isDurationMatch !== b.isDurationMatch) return a.isDurationMatch ? -1 : 1;
+          if (a.hasSynced !== b.hasSynced) return a.hasSynced ? -1 : 1;
+          return a.durDiff - b.durDiff;
+        }).slice(0, 10);
+
+        state.lrcCandidates = scored;
+
+        box.innerHTML = scored.map((item, idx) => {
+          const rawText = item.syncedLyrics || item.plainLyrics || '';
+          const preview = rawText
+            .split(/\r?\n/)
+            .map(l => l.replace(/\[\d{1,2}:\d{2}(?:[.:]\d{1,3})?\]/g, '').trim())
+            .filter(Boolean)
+            .slice(0, 2)
+            .join(' / ');
+
+          return `
+            <div class="result-item" style="flex-direction:column; align-items:stretch; gap:6px;">
+              <div style="display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:8px;">
+                <div style="min-width:0; flex:1;">
+                  <div style="font-size:13px; font-weight:800;">
+                    ${escapeHtml(item.trackName)} <span style="font-weight:500; color:var(--text-secondary);">- ${escapeHtml(item.artistName)}</span>
+                  </div>
+                  <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;">
+                    ${item.isDurationMatch ? '<span class="badge badge-success">✓ 時長吻合</span>' : ''}
+                    ${item.hasSynced ? '<span class="badge">有同步時間軸</span>' : '<span class="badge badge-muted">純文字</span>'}
+                    <span class="lyrics-status" style="margin:0; align-self:center;">時長 ${formatTime(item.duration)}</span>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" onclick="applyLrclibCandidate(${idx})">套用此歌詞</button>
+              </div>
+              <p class="lyrics-status" style="margin:0; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                預覽：${escapeHtml(preview || '（無文字預覽）')}
+              </p>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:24px 0; color:var(--danger-text);">無法連線至 LRCLIB，請檢查網路狀態後重試。</p>';
+      }
+    }
+
+    function applyLrclibCandidate(idx) {
+      const item = state.lrcCandidates[idx];
+      const track = state.tracks[state.currentIndex];
+      if (!item || !track) return;
+      const text = item.syncedLyrics || item.plainLyrics || '';
+      track.lrc = text;
+      state.lyricOffset = 0;
+      updateOffsetLabel();
+      parseAndRenderLyrics(text, '已套用：' + item.trackName + ' - ' + item.artistName);
+      closeLyricsSearchModal();
+      showToast('已套用「' + item.trackName + '」歌詞');
+    }
+
+    /* 編輯、匯出、大字歌詞 */
+    function openLyricEditorModal() {
+      const track = state.tracks[state.currentIndex];
+      document.getElementById('lyricEditorTextarea').value = track ? (track.lrc || '') : '';
+      document.getElementById('lyricEditorModal').classList.remove('hidden');
+    }
+    function closeLyricEditorModal() { document.getElementById('lyricEditorModal').classList.add('hidden'); }
+    function saveEditedLyrics() {
+      const track = state.tracks[state.currentIndex];
+      if (!track) return;
+      track.lrc = document.getElementById('lyricEditorTextarea').value;
+      parseAndRenderLyrics(track.lrc, '已套用手動編輯的歌詞');
+      closeLyricEditorModal();
+      showToast('歌詞已更新');
+    }
+
+    function exportCurrentLrc() {
+      const track = state.tracks[state.currentIndex];
+      if (!track || !track.lrc) return showToast('目前曲目尚無歌詞可匯出');
+      const blob = new Blob([track.lrc], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = track.title + '.lrc';
+      a.click();
+      showToast('已匯出 .lrc 歌詞檔');
+    }
+
+    function openImmersiveLyrics() {
+      const track = state.tracks[state.currentIndex];
+      if (track) {
+        document.getElementById('immersiveTitle').textContent = track.title;
+        document.getElementById('immersiveArtist').textContent = track.artist || '未知歌手';
+      }
+      updateTranslateButtons();
+      document.getElementById('immersiveModal').classList.remove('hidden');
+      syncLyricsHighlight(audio.currentTime || 0, true);
+    }
+    function closeImmersiveLyrics() { document.getElementById('immersiveModal').classList.add('hidden'); }
+
+    /* ========================================================================
+       9. 環境聽歌識曲（純淨收音 + AudD 聲紋 + Gemini AI 兩階段查證）
+       ======================================================================== */
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let micStream = null;
+    let analyserNode = null;
+    let vizRafId = null;
+    let recordTimer = null;
+
+    function setRecordDuration(sec) {
+      state.recordDuration = sec;
+      document.querySelectorAll('.dur-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.dur, 10) === sec);
+      });
+    }
+
+    async function toggleRecording() {
+      if (state.isRecording) { stopRecording(); return; }
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          return showToast('此瀏覽器環境不支援麥克風收音，請改用下方歐美搜尋');
+        }
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        });
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const actx = new AudioCtx();
+          const src = actx.createMediaStreamSource(micStream);
+          analyserNode = actx.createAnalyser();
+          analyserNode.fftSize = 128;
+          src.connect(analyserNode);
+        }
+
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(micStream);
+        mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          document.getElementById('recordedAudioPlayer').src = URL.createObjectURL(blob);
+          document.getElementById('recordedAudioBox').classList.remove('hidden');
+          runDualEngineRecognition(blob);
+        };
+
+        mediaRecorder.start();
+        state.isRecording = true;
+        document.getElementById('recordBtn').classList.add('recording');
+        document.getElementById('recordBtnIcon').textContent = '⏹';
+        document.getElementById('recordBtnText').textContent = '停止收音';
+        drawSpectrumLoop();
+
+        let remain = state.recordDuration;
+        document.getElementById('recordStatusText').textContent = '正在純淨收音中... 剩餘 ' + remain + ' 秒';
+        recordTimer = setInterval(() => {
+          remain--;
+          if (remain <= 0) stopRecording();
+          else document.getElementById('recordStatusText').textContent = '正在純淨收音中... 剩餘 ' + remain + ' 秒';
+        }, 1000);
+      } catch (e) {
+        showToast('無法取得麥克風權限，請檢查瀏覽器權限設定');
+      }
+    }
+
+    function stopRecording() {
+      state.isRecording = false;
+      clearInterval(recordTimer);
+      cancelAnimationFrame(vizRafId);
+      try {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        if (micStream) micStream.getTracks().forEach(t => t.stop());
+      } catch (e) {}
+      document.getElementById('recordBtn').classList.remove('recording');
+      document.getElementById('recordBtnIcon').textContent = '🎙️';
+      document.getElementById('recordBtnText').textContent = '開始聽歌識曲';
+      document.getElementById('recordStatusText').textContent = '收音完成，正在進行雙引擎辨識...';
+    }
+
+    function drawSpectrumLoop() {
+      const canvas = document.getElementById('spectrumCanvas');
+      if (!canvas || !analyserNode) return;
+      const ctx = canvas.getContext('2d');
+      const data = new Uint8Array(analyserNode.frequencyBinCount);
+      const theme = THEMES.find(t => t.id === state.themeId) || THEMES[0];
+
+      const render = () => {
+        if (!state.isRecording) return;
+        vizRafId = requestAnimationFrame(render);
+        analyserNode.getByteFrequencyData(data);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        grad.addColorStop(0, theme.viz[0]);
+        grad.addColorStop(0.5, theme.viz[1]);
+        grad.addColorStop(1, theme.viz[2]);
+        ctx.fillStyle = grad;
+
+        let sum = 0;
+        const barW = canvas.width / data.length;
+        for (let i = 0; i < data.length; i++) {
+          sum += data[i];
+          const h = (data[i] / 255) * canvas.height;
+          ctx.fillRect(i * barW, canvas.height - h, Math.max(2, barW - 2), h);
+        }
+        const avg = sum / data.length;
+        const db = Math.round((avg / 255) * 60 - 60);
+        document.getElementById('dbMeterText').textContent = db + ' dB';
+        document.getElementById('dbMeterBar').style.width = Math.min(100, Math.round((avg / 180) * 100)) + '%';
+        document.getElementById('dbQualityHint').textContent = avg < 14
+          ? '收音偏小，請靠近喇叭'
+          : (avg > 150 ? '音量飽滿，請避免爆音' : '收音強度良好');
+      };
+      render();
+    }
+
+    async function fetchWithRetry(url, options, maxRetries) {
+      let delay = 1000;
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          const res = await fetch(url, options);
+          if (res.ok || res.status < 500) return res;
+        } catch (e) {}
+        await new Promise(r => setTimeout(r, delay));
+        delay *= 2;
+      }
+      return fetch(url, options);
+    }
+
+    async function runDualEngineRecognition(audioBlob) {
+      const panel = document.getElementById('recognitionResultPanel');
+      const candList = document.getElementById('candidateList');
+      panel.classList.remove('hidden');
+      candList.innerHTML = '<p class="lyrics-status">正在進行雙引擎辨識...</p>';
+
+      const effectiveToken = state.auddToken || (state.auddUseTest ? 'test' : '');
+      if (effectiveToken) {
+        try {
+          const fd = new FormData();
+          fd.append('api_token', effectiveToken);
+          fd.append('file', audioBlob, 'clip.webm');
+          fd.append('return', 'apple_music,spotify');
+          const res = await fetch('https://api.audd.io/', { method: 'POST', body: fd });
+          const data = await res.json();
+          if (data && data.status === 'success' && data.result) {
+            const r = data.result;
+            document.getElementById('recognitionEngineBadge').textContent = 'AudD 聲紋命中';
+            document.getElementById('recordStatusText').textContent = '辨識成功：' + r.title + ' - ' + r.artist;
+            document.getElementById('aiTranscriptInput').value = r.title + ' ' + r.artist;
+            const verified = await queryItunesMultiRegion(r.title + ' ' + r.artist, 'EU_US');
+            renderCandidateCards(verified.length ? verified.slice(0, 4) : [{ title: r.title, artist: r.artist, previewUrl: '', cover: '', source: 'AudD' }]);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      document.getElementById('recognitionEngineBadge').textContent = 'Gemini AI 歌詞反查';
+      candList.innerHTML = '<p class="lyrics-status">AudD 未命中，已自動切換至 Gemini AI 兩階段聽寫與曲庫查證...</p>';
+
+      try {
+        const base64 = await blobToBase64(audioBlob);
+        const apiKey = '';
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + apiKey;
+        const payload = {
+          contents: [{
+            parts: [
+              { text: '請仔細聆聽這段環境音樂錄音。嚴格逐字聽寫你能清楚聽到的歌詞片段，若為純音樂請簡短描述樂器與曲風，嚴禁編造或猜測沒聽到的詞。請僅輸出一行最適合用於搜尋歌曲的關鍵歌詞或曲風字詞。' },
+              { inlineData: { mimeType: audioBlob.type || 'audio/webm', data: base64 } }
+            ]
+          }]
+        };
+        const res = await fetchWithRetry(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }, 3);
+        const json = await res.json();
+        const text = (json && json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts && json.candidates[0].content.parts[0] && json.candidates[0].content.parts[0].text || '').trim();
+        document.getElementById('aiTranscriptInput').value = text;
+        if (text) {
+          document.getElementById('recordStatusText').textContent = 'AI 聽寫完成，正在比對 LRCLIB 與歐美曲庫...';
+          await reVerifyFromTranscript();
+        } else {
+          document.getElementById('recordStatusText').textContent = '環境音過小或無清晰人聲，請靠近音源重試或手動輸入歌詞。';
+          candList.innerHTML = '<p class="lyrics-status">未能擷取清晰歌詞，請於上方輸入關鍵字後按「重查曲庫」。</p>';
+        }
+      } catch (e) {
+        document.getElementById('recordStatusText').textContent = 'AI 辨識暫時無法連線，請手動輸入聽到的歌詞查詢。';
+        candList.innerHTML = '<p class="lyrics-status">請於上方輸入聽到的歌詞並點擊「重查曲庫」。</p>';
+      }
+    }
+
+    async function reVerifyFromTranscript() {
+      const q = document.getElementById('aiTranscriptInput').value.trim();
+      if (!q) return showToast('請先輸入歌詞或關鍵字');
+      const candList = document.getElementById('candidateList');
+      candList.innerHTML = '<p class="lyrics-status">正在向 LRCLIB 與 iTunes 歐美曲庫查證...</p>';
+
+      let searchQuery = q;
+      try {
+        const lrcRes = await fetch('https://lrclib.net/api/search?q=' + encodeURIComponent(q));
+        const lrcData = await lrcRes.json();
+        if (Array.isArray(lrcData) && lrcData[0]) {
+          searchQuery = lrcData[0].trackName + ' ' + lrcData[0].artistName;
+        }
+      } catch (e) {}
+
+      const tracks = await queryItunesMultiRegion(searchQuery, 'EU_US');
+      renderCandidateCards(tracks.slice(0, 4));
+    }
+
+    function renderCandidateCards(items) {
+      state.recCandidates = items || [];
+      const candList = document.getElementById('candidateList');
+      if (!state.recCandidates.length) {
+        candList.innerHTML = '<p class="lyrics-status">查無相符曲目，請微調上方歌詞關鍵字再重查。</p>';
+        return;
+      }
+      candList.innerHTML = state.recCandidates.map((item, idx) => `
+        <div class="result-item">
+          <div class="result-left">
+            ${item.cover ? `<img src="${escapeHtml(item.cover)}" alt="封面" class="result-cover" />` : '<div class="result-cover" style="display:flex;align-items:center;justify-content:center;">🎵</div>'}
+            <div style="min-width:0;">
+              <p class="track-item-title">${idx === 0 ? '★ Top 1 · ' : ''}${escapeHtml(item.title)}</p>
+              <p class="track-item-sub">${escapeHtml(item.artist)}</p>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            ${item.previewUrl ? `<button type="button" class="btn btn-sm" onclick="togglePreviewByUrl('${encodeURI(item.previewUrl)}')">▶ 30秒試聽</button>` : ''}
+            <button type="button" class="btn btn-primary btn-sm" onclick="selectRecCandidate(${idx})">選定並載入</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectRecCandidate(idx) {
+      const item = state.recCandidates[idx];
+      if (item) selectTrackToPlayer(item);
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(String(reader.result || '').split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    /* ========================================================================
+       10. 歐美跨區 iTunes 搜尋 & 五大平台搜尋中心
+       ======================================================================== */
+    async function queryItunesMultiRegion(term, region) {
+      const countries = region === 'EU_US' ? ['US', 'GB', 'DE'] : [region];
+      const results = [];
+      const seen = new Set();
+
+      await Promise.all(countries.map(async (c) => {
+        try {
+          const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(term) + '&entity=song&limit=6&country=' + c);
+          const data = await res.json();
+          (data.results || []).forEach(r => {
+            const key = (r.trackName || '').toLowerCase() + '__' + (r.artistName || '').toLowerCase();
+            if (!seen.has(key)) {
+              seen.add(key);
+              results.push({
+                title: r.trackName,
+                artist: r.artistName,
+                cover: (r.artworkUrl100 || '').replace('100x100', '300x300'),
+                previewUrl: r.previewUrl || '',
+                source: 'iTunes (' + c + ')'
+              });
+            }
+          });
+        } catch (e) {}
+      }));
+      return results;
+    }
+
+    function quickSearch(term) {
+      document.getElementById('itunesSearchInput').value = term;
+      runItunesSearch();
+    }
+
+    async function runItunesSearch() {
+      const term = document.getElementById('itunesSearchInput').value.trim();
+      if (!term) return;
+      const region = document.getElementById('regionSelect').value;
+      const box = document.getElementById('itunesResultsList');
+      box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:18px 0;">正在搜尋 ' + (region === 'EU_US' ? '歐美跨區 (US/GB/DE)' : region) + ' 曲庫...</p>';
+
+      document.getElementById('crossPlatformInput').value = term;
+      renderPlatformCards();
+
+      const items = await queryItunesMultiRegion(term, region);
+      state.itunesResults = items;
+
+      if (!items.length) {
+        box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:18px 0;">找不到相符曲目，請嘗試其他關鍵字或切換區域。</p>';
+        return;
+      }
+      box.innerHTML = items.map((item, idx) => `
+        <div class="result-item">
+          <div class="result-left">
+            <img src="${escapeHtml(item.cover)}" alt="封面" class="result-cover" />
+            <div style="min-width:0;">
+              <p class="track-item-title">${escapeHtml(item.title)}</p>
+              <p class="track-item-sub">${escapeHtml(item.artist)} · ${escapeHtml(item.source)}</p>
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            ${item.previewUrl ? `<button type="button" class="btn btn-sm" onclick="togglePreviewByUrl('${encodeURI(item.previewUrl)}')">▶ 試聽</button>` : ''}
+            <button type="button" class="btn btn-primary btn-sm" onclick="selectItunesResult(${idx})">載入播放器</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectItunesResult(idx) {
+      const item = state.itunesResults[idx];
+      if (item) selectTrackToPlayer(item);
+    }
+
+    function togglePreviewByUrl(url) {
+      if (!previewAudio) return;
+      if (previewAudio.src === url && !previewAudio.paused) {
+        previewAudio.pause();
+        showToast('已暫停試聽');
+        return;
+      }
+      if (audio) audio.pause();
+      previewAudio.src = url;
+      previewAudio.play().catch(() => showToast('無法播放試聽音檔'));
+      showToast('正在播放 30 秒官方試聽');
+    }
+
+    function selectTrackToPlayer(item) {
+      state.tracks.push({
+        title: item.title,
+        artist: item.artist,
+        cover: item.cover || '',
+        url: item.previewUrl || (state.tracks[0] ? state.tracks[0].url : ''),
+        source: item.source || '線上試聽',
+        lrc: ''
+      });
+      document.getElementById('crossPlatformInput').value = item.title + ' ' + item.artist;
+      renderPlatformCards();
+      switchTab('player');
+      loadTrack(state.tracks.length - 1, true);
+      showToast('已載入「' + item.title + '」，可點「🔍 搜尋歌詞」挑選同步歌詞');
+    }
+
+    function searchCurrentTrackCrossPlatform() {
+      const t = state.tracks[state.currentIndex];
+      if (!t) return;
+      document.getElementById('crossPlatformInput').value = (t.title.replace(/\(示範曲\)/g, '').trim() + ' ' + (t.artist || '')).trim();
+      renderPlatformCards();
+      switchTab('recognize');
+    }
+
+    const PLATFORMS = [
+      { id: 'youtube',    name: 'YouTube',       icon: '▶', url: q => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q) },
+      { id: 'ytmusic',    name: 'YouTube Music', icon: '🎵', url: q => 'https://music.youtube.com/search?q=' + encodeURIComponent(q) },
+      { id: 'applemusic', name: 'Apple Music',   icon: '🍎', url: q => 'https://music.apple.com/search?term=' + encodeURIComponent(q) },
+      { id: 'spotify',    name: 'Spotify',       icon: '🟢', url: q => 'https://open.spotify.com/search/' + encodeURIComponent(q) },
+      { id: 'kkbox',      name: 'KKBOX',         icon: '🔵', url: q => 'https://www.kkbox.com/tw/tc/search.php?word=' + encodeURIComponent(q) }
+    ];
+
+    function renderPlatformCards() {
+      const q = document.getElementById('crossPlatformInput').value.trim() || 'Coldplay Fix You';
+      document.getElementById('platformCardsGrid').innerHTML = PLATFORMS.map(p => {
+        const link = p.url(q);
+        const checked = state.selectedPlatforms.has(p.id);
+        return `
+          <div class="platform-card">
+            <label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; cursor:pointer;">
+              <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePlatformSelect('${p.id}', this.checked)" />
+              <span>${p.icon} ${p.name}</span>
+            </label>
+            <div style="display:flex; gap:6px;">
+              <a href="${link}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="flex:1;">${t('openPlatformBtn')}</a>
+              <button type="button" class="btn btn-sm" onclick="copyText('${link.replace(/'/g, "\\'")}')">${t('copyBtn')}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function togglePlatformSelect(id, checked) {
+      if (checked) state.selectedPlatforms.add(id);
+      else state.selectedPlatforms.delete(id);
+    }
+
+    function openSelectedPlatforms() {
+      const q = document.getElementById('crossPlatformInput').value.trim() || 'Coldplay Fix You';
+      PLATFORMS.filter(p => state.selectedPlatforms.has(p.id)).forEach(p => {
+        window.open(p.url(q), '_blank', 'noopener,noreferrer');
+      });
+      showToast('已批次開啟所選音樂平台');
+    }
+
+    function copyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('已複製平台搜尋連結');
+      } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    /* ========================================================================
+       11. 右上角 ⚙️ 程式設定彈窗（6 款主題 + 自訂背景圖 + AudD 設定）
+       ======================================================================== */
+    function openSettingsModal() {
+      document.getElementById('auddTokenInput').value = state.auddToken;
+      document.getElementById('auddTestToggle').checked = state.auddUseTest;
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+    function saveAuddSettings() {
+      state.auddToken = document.getElementById('auddTokenInput').value.trim();
+      state.auddUseTest = document.getElementById('auddTestToggle').checked;
+      safeSetLS('sa_audd_token', state.auddToken);
+      safeSetLS('sa_audd_test', state.auddUseTest ? 'true' : 'false');
+      showToast('AudD 辨識引擎設定已儲存');
+    }
+
+    function renderThemeGrid() {
+      const dictThemes = (I18N[state.lang] && I18N[state.lang].themes) || I18N['zh-TW'].themes;
+      document.getElementById('themeGrid').innerHTML = THEMES.map(th => {
+        const active = state.themeId === th.id;
+        const localized = dictThemes[th.id] || [th.name, th.desc];
+        return `
+          <button type="button" class="theme-card ${active ? 'active' : ''}" onclick="applyTheme('${th.id}', true)">
+            <div class="theme-swatch" style="background:${th.preview};">
+              ${active ? '<span style="position:absolute;top:4px;right:6px;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,0.75);color:#fff;font-size:10px;font-weight:700;">' + t('themeInUse') + '</span>' : ''}
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:${th.dot};flex-shrink:0;"></span>
+              <span style="font-size:12px; font-weight:800;">${localized[0]}</span>
+            </div>
+            <p class="lyrics-status" style="margin:2px 0 0; font-size:10px;">${localized[1]}</p>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function applyTheme(themeId, notify) {
+      const th = THEMES.find(x => x.id === themeId) || THEMES[0];
+      state.themeId = th.id;
+      document.documentElement.setAttribute('data-theme', th.id);
+      safeSetLS('sa_theme', th.id);
+      const dictThemes = (I18N[state.lang] && I18N[state.lang].themes) || I18N['zh-TW'].themes;
+      const localizedName = (dictThemes[th.id] && dictThemes[th.id][0]) || th.name;
+      document.getElementById('currentThemeBadge').textContent = localizedName;
+      renderThemeGrid();
+      if (notify) showToast(localizedName);
+    }
+
+    function applyCustomBg() {
+      const layer = document.getElementById('bgImage');
+      const op = Math.min(100, Math.max(0, isNaN(state.bgOpacity) ? 45 : state.bgOpacity));
+      const bl = Math.min(20, Math.max(0, isNaN(state.bgBlur) ? 2 : state.bgBlur));
+      state.bgOpacity = op;
+      state.bgBlur = bl;
+
+      document.getElementById('bgOpacitySlider').value = op;
+      document.getElementById('bgOpacityVal').textContent = op + '%';
+      document.getElementById('bgBlurSlider').value = bl;
+      document.getElementById('bgBlurVal').textContent = bl + 'px';
+
+      if (state.bgImageUrl) {
+        layer.style.backgroundImage = 'url("' + state.bgImageUrl + '")';
+        layer.style.opacity = (op / 100).toFixed(2);
+        layer.style.filter = 'blur(' + bl + 'px)';
+        document.getElementById('bgPreviewBox').classList.remove('hidden');
+        document.getElementById('bgThumbImg').src = state.bgImageUrl;
+        document.getElementById('bgFileName').textContent = state.bgImageName || '自訂背景圖片';
+        document.getElementById('clearBgBtn').classList.remove('hidden');
+      } else {
+        layer.style.backgroundImage = 'none';
+        layer.style.opacity = '0';
+        layer.style.filter = 'none';
+        document.getElementById('bgPreviewBox').classList.add('hidden');
+        document.getElementById('clearBgBtn').classList.add('hidden');
+      }
+    }
+
+    function handleBgFile(file) {
+      if (!file) return;
+      if (!/\.(jpe?g|png|webp|gif)$/i.test(file.name) && !(file.type && file.type.startsWith('image/'))) {
+        return showToast('請選擇 JPG、PNG、WebP 或 GIF 圖片');
+      }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        state.bgImageUrl = e.target.result;
+        state.bgImageName = file.name;
+        safeSetLS('sa_bg_name', file.name);
+        applyCustomBg();
+        await saveBgToDb(state.bgImageUrl);
+        showToast('已套用背景圖片「' + file.name + '」');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function clearCustomBg() {
+      state.bgImageUrl = null;
+      state.bgImageName = '';
+      safeRemoveLS('sa_bg_name');
+      await clearBgFromDb();
+      applyCustomBg();
+      showToast('已清除自訂背景圖片');
+    }
+
+    async function resetAppearanceDefaults() {
+      state.bgOpacity = 45;
+      state.bgBlur = 2;
+      safeSetLS('sa_bg_opacity', '45');
+      safeSetLS('sa_bg_blur', '2');
+      applyTheme('dark', false);
+      await clearCustomBg();
+      showToast('已重設為預設外觀（極致黑、濃淡 45%、模糊 2px）');
+    }
+
+    /* ========================================================================
+       12. 安全初始化（DOMContentLoaded + try/catch 全面保護）
+       ======================================================================== */
+    window.addEventListener('DOMContentLoaded', async function() {
+      try {
+        audio = document.getElementById('mainAudio');
+        previewAudio = document.getElementById('previewAudio');
+        audio.volume = 0.8;
+
+        audio.addEventListener('play', () => {
+          document.getElementById('playPauseBtn').textContent = '⏸';
+          document.getElementById('discVisual').classList.remove('paused');
+          startLyricSyncLoop();
+        });
+        audio.addEventListener('pause', () => {
+          document.getElementById('playPauseBtn').textContent = '▶';
+          document.getElementById('discVisual').classList.add('paused');
+          cancelAnimationFrame(lyricRafId);
+        });
+        audio.addEventListener('ended', () => {
+          cancelAnimationFrame(lyricRafId);
+          if (!state.isLooping) nextTrack();
+        });
+        audio.addEventListener('timeupdate', () => {
+          const cur = audio.currentTime || 0;
+          const dur = audio.duration || 0;
+          document.getElementById('currentTimeEl').textContent = formatTime(cur);
+          document.getElementById('durationEl').textContent = formatTime(dur);
+          if (dur > 0) document.getElementById('seekBar').value = (cur / dur) * 100;
+          syncLyricsHighlight(cur, false);
+        });
+        audio.addEventListener('seeked', () => {
+          syncLyricsHighlight(audio.currentTime || 0, true);
+        });
+
+        document.getElementById('seekBar').addEventListener('input', (e) => {
+          if (audio.duration) {
+            audio.currentTime = (parseFloat(e.target.value) / 100) * audio.duration;
+            syncLyricsHighlight(audio.currentTime, true);
+          }
+        });
+        document.getElementById('volumeBar').addEventListener('input', (e) => {
+          audio.volume = parseFloat(e.target.value);
+        });
+
+        // 本地音訊 / .lrc 匯入與拖放
+        document.getElementById('localFileInput').addEventListener('change', (e) => {
+          handleLocalFiles(e.target.files);
+          e.target.value = '';
+        });
+        const pDrop = document.getElementById('playlistDropZone');
+        ['dragenter', 'dragover'].forEach(ev => pDrop.addEventListener(ev, (e) => { e.preventDefault(); pDrop.classList.add('drop-active'); }));
+        ['dragleave', 'drop'].forEach(ev => pDrop.addEventListener(ev, (e) => { e.preventDefault(); pDrop.classList.remove('drop-active'); }));
+        pDrop.addEventListener('drop', (e) => handleLocalFiles(e.dataTransfer ? e.dataTransfer.files : []));
+
+        // 背景圖片匯入、拖放與拉桿
+        document.getElementById('bgFileInput').addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) handleBgFile(e.target.files[0]);
+          e.target.value = '';
+        });
+        const bgDrop = document.getElementById('bgDropZone');
+        ['dragenter', 'dragover'].forEach(ev => bgDrop.addEventListener(ev, (e) => { e.preventDefault(); bgDrop.classList.add('drop-active'); }));
+        ['dragleave', 'drop'].forEach(ev => bgDrop.addEventListener(ev, (e) => { e.preventDefault(); bgDrop.classList.remove('drop-active'); }));
+        bgDrop.addEventListener('drop', (e) => {
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) handleBgFile(e.dataTransfer.files[0]);
+        });
+        document.getElementById('bgOpacitySlider').addEventListener('input', (e) => {
+          state.bgOpacity = parseInt(e.target.value, 10);
+          safeSetLS('sa_bg_opacity', state.bgOpacity);
+          applyCustomBg();
+        });
+        document.getElementById('bgBlurSlider').addEventListener('input', (e) => {
+          state.bgBlur = parseInt(e.target.value, 10);
+          safeSetLS('sa_bg_blur', state.bgBlur);
+          applyCustomBg();
+        });
+
+        // 點擊彈窗遮罩外部關閉
+        ['lyricsSearchModal', 'lyricEditorModal', 'settingsModal'].forEach(id => {
+          const modal = document.getElementById(id);
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+          });
+        });
+
+        applyTheme(state.themeId, false);
+        initDemoTracks();
+        renderPlatformCards();
+        applyLanguage(state.lang, false);
+
+        const savedBg = await loadBgFromDb();
+        if (savedBg) state.bgImageUrl = savedBg;
+        applyCustomBg();
+      } catch (err) {
+        console.error('SonicAura init error:', err);
+      }
+    });
+  </script>
+</body>
+</html>
