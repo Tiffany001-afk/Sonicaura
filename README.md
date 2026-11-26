@@ -18,8 +18,6 @@
 
 ## 🖼️ 介面預覽 / Screenshots
 
-> 💡 提示：將您的截圖上傳至專案內的 `screenshots/` 資料夾並依下列檔名命名，即可自動顯示。
-
 | 🎵 整合式播放器與同步歌詞 | 🎙️ 環境聽歌識曲與歐美跨區搜尋 |
 | :---: | :---: |
 | ![播放器與同步歌詞](./screenshots/player-lyrics.png) | ![環境聽歌識曲與跨平台搜尋](./screenshots/recognize-search.png) |
