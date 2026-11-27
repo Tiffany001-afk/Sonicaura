@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SonicAura — 環境辨識與歌詞同步音樂播放器</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#090d16" />
   <style>
     /* ========================================================================
        1. 六款主題 CSS 變數系統（100% 純內嵌 CSS，無任何外部 CDN 依賴）
@@ -1811,13 +1813,20 @@
         </div>
       </div>
 
-      <!-- AudD 聲紋引擎設定 -->
+      <!-- AudD 與 Gemini API 引擎設定 -->
       <div style="padding-top:12px; border-top:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;">
-        <h4 style="margin:0; font-size:14px;" data-i18n="auddSectionTitle">🎛️ 環境聽歌識曲引擎（AudD API Token）</h4>
-        <p class="lyrics-status" style="margin:0;" data-i18n="auddSectionDesc">填入個人 AudD Token 或開啟公開 test 模式以進行聲紋比對；未命中或額度滿時會自動切換至 Gemini AI 兩階段聽寫查證。</p>
-        <div class="search-row">
-          <input id="auddTokenInput" type="text" class="input" style="font-family:ui-monospace,monospace;" data-i18n-placeholder="auddPlaceholder" placeholder="輸入您的 AudD API Token..." />
-          <button type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="saveAuddSettings()" data-i18n="saveBtn">儲存</button>
+        <h4 style="margin:0; font-size:14px;" data-i18n="auddSectionTitle">🎛️ 環境聽歌識曲與 AI 翻譯引擎設定</h4>
+        <p class="lyrics-status" style="margin:0;" data-i18n="auddSectionDesc">金鑰僅安全儲存於本機瀏覽器。上架 GitHub Pages 時填入免費 Gemini API Key 即可啟用 AI 歌詞翻譯與聽寫辨識；AudD Token 則提供聲紋比對。</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label for="geminiKeyInput" style="font-size:11px; color:var(--text-secondary);">Gemini API Key（AI 雙語翻譯 &amp; AI 環境音辨識）</label>
+          <input id="geminiKeyInput" type="password" class="input" style="font-family:ui-monospace,monospace;" placeholder="貼上 AIzaSy... 金鑰（選填）" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <label for="auddTokenInput" style="font-size:11px; color:var(--text-secondary);">AudD API Token（聲紋比對，選填）</label>
+          <div class="search-row">
+            <input id="auddTokenInput" type="password" class="input" style="font-family:ui-monospace,monospace;" data-i18n-placeholder="auddPlaceholder" placeholder="輸入您的 AudD API Token..." />
+            <button type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="saveAuddSettings()" data-i18n="saveBtn">儲存</button>
+          </div>
         </div>
         <label style="display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); cursor:pointer;">
           <input id="auddTestToggle" type="checkbox" onchange="saveAuddSettings()" />
@@ -2432,6 +2441,7 @@
       recCandidates: [],
       recordDuration: 10,
       isRecording: false,
+      geminiKey: safeGetLS('sa_gemini_key', ''),
       auddToken: safeGetLS('sa_audd_token', ''),
       auddUseTest: safeGetLS('sa_audd_test', 'true') === 'true',
       selectedPlatforms: new Set(['youtube', 'ytmusic', 'applemusic', 'spotify', 'kkbox']),
@@ -3569,8 +3579,8 @@
       try {
         const sourceLines = state.parsedLyrics.map(l => l.text);
         const targetLangDesc = t('translatePromptLang');
-        const apiKey = '';
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
+        const apiKey = state.geminiKey || '';
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
 
         const payload = {
           systemInstruction: {
@@ -4030,8 +4040,8 @@
 
       try {
         const base64 = await blobToBase64(audioBlob);
-        const apiKey = '';
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + apiKey;
+        const apiKey = state.geminiKey || '';
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
         const payload = {
           contents: [{
             parts: [
@@ -4119,30 +4129,34 @@
     }
 
     /* ========================================================================
-       10. 歐美跨區 iTunes 搜尋（擴充筆數 + 上一頁／下一頁分頁）& 五大平台中心
+       10. 歐美與全球跨區搜尋（iTunes Search API）與五大平台搜尋中心
        ======================================================================== */
-    async function queryItunesMultiRegion(term, region, customLimit) {
-      const countries = region === 'EU_US' ? ['US', 'GB', 'DE'] : [region];
-      const perCountryLimit = customLimit || (region === 'EU_US' ? 25 : 50);
-      const results = [];
+    async function queryItunesMultiRegion(term, region, limitOverride) {
+      const regions = region === 'EU_US' ? ['US', 'GB', 'DE'] : [region || 'US'];
+      const perRegionLimit = limitOverride || (region === 'EU_US' ? 25 : 50);
       const seen = new Set();
+      const results = [];
 
-      await Promise.all(countries.map(async (c) => {
+      await Promise.all(regions.map(async (cc) => {
         try {
-          const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(term) + '&entity=song&limit=' + perCountryLimit + '&country=' + c);
+          const url = 'https://itunes.apple.com/search?term=' + encodeURIComponent(term) +
+            '&country=' + encodeURIComponent(cc) + '&entity=song&limit=' + perRegionLimit;
+          const res = await fetch(url);
+          if (!res.ok) return;
           const data = await res.json();
           (data.results || []).forEach(r => {
-            const key = (r.trackName || '').toLowerCase() + '__' + (r.artistName || '').toLowerCase();
-            if (!seen.has(key)) {
-              seen.add(key);
-              results.push({
-                title: r.trackName,
-                artist: r.artistName,
-                cover: (r.artworkUrl100 || '').replace('100x100', '300x300'),
-                previewUrl: r.previewUrl || '',
-                source: 'iTunes (' + c + ')'
-              });
-            }
+            if (!r.trackName) return;
+            const key = (r.trackName + '|' + (r.artistName || '')).toLowerCase().trim();
+            if (seen.has(key)) return;
+            seen.add(key);
+            results.push({
+              title: r.trackName,
+              artist: r.artistName || '未知歌手',
+              album: r.collectionName || '',
+              cover: (r.artworkUrl100 || '').replace('100x100bb', '300x300bb'),
+              previewUrl: r.previewUrl || '',
+              source: 'iTunes ' + cc
+            });
           });
         } catch (e) {}
       }));
@@ -4341,12 +4355,29 @@
     }
 
     /* ========================================================================
-       11. 右上角 ⚙️ 程式設定彈窗（6 款主題 + 自訂背景圖 + AudD 設定）
+       11. 右上角 ⚙️ 程式設定彈窗（6 款主題 + 自訂背景圖 + API 設定）
        ======================================================================== */
     function openSettingsModal() {
+      const gk = document.getElementById('geminiKeyInput');
+      if (gk) gk.value = state.geminiKey;
       document.getElementById('auddTokenInput').value = state.auddToken;
       document.getElementById('auddTestToggle').checked = state.auddUseTest;
       document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+    function saveAuddSettings() {
+      const gk = document.getElementById('geminiKeyInput');
+      if (gk) {
+        state.geminiKey = gk.value.trim();
+        safeSetLS('sa_gemini_key', state.geminiKey);
+      }
+      state.auddToken = document.getElementById('auddTokenInput').value.trim();
+      state.auddUseTest = document.getElementById('auddTestToggle').checked;
+      safeSetLS('sa_audd_token', state.auddToken);
+      safeSetLS('sa_audd_test', state.auddUseTest ? 'true' : 'false');
+      showToast('API 引擎設定已安全儲存於本機瀏覽器');
     }
     function closeSettingsModal() {
       document.getElementById('settingsModal').classList.add('hidden');
@@ -4557,6 +4588,10 @@
         const savedBg = await loadBgFromDb();
         if (savedBg) state.bgImageUrl = savedBg;
         applyCustomBg();
+
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
       } catch (err) {
         console.error('SonicAura init error:', err);
       }
