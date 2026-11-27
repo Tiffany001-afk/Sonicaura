@@ -3512,6 +3512,37 @@
       } else if (state.isSyncedLyrics && state.activeLyricIdx >= 0) {
         const activeEl = box.querySelector(`[data-lrc-idx="${state.activeLyricIdx}"]`);
         if (activeEl) scrollContainerToElement(box, activeEl);
+      }
+    }
+
+    function updateTranslateButtons() {
+      const btns = [
+        document.getElementById('translateLyricsBtn'),
+        document.getElementById('immersiveTranslateBtn')
+      ];
+      const hasLyrics = state.parsedLyrics && state.parsedLyrics.length > 0;
+      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
+      const hasCached = Boolean(cacheKey && state.translationCache[cacheKey]);
+
+      btns.forEach(btn => {
+        if (!btn) return;
+        btn.disabled = state.isTranslating || !hasLyrics;
+        if (state.isTranslating) {
+          btn.textContent = t('translatingBtn');
+          btn.classList.remove('btn-active');
+        } else if (state.showTranslation) {
+          btn.textContent = t('hideTransBtn');
+          btn.classList.add('btn-active');
+        } else if (hasCached) {
+          btn.textContent = t('showTransBtn');
+          btn.classList.remove('btn-active');
+        } else {
+          btn.textContent = t('translateBtn');
+          btn.classList.remove('btn-active');
+        }
+      });
+    }
+
     async function translateLinesFreeFallback(sourceLines, langCode) {
       const tlMap = { 'zh-TW': 'zh-TW', 'zh-CN': 'zh-CN', 'en': 'en', 'ja': 'ja' };
       const tl = tlMap[langCode] || 'zh-TW';

@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 啟用階段：自動清除舊版快取（如 sonicaura-v1 ~ v5）
+// 啟用階段：自動清除舊版快取（如 sonicaura-v1 ~ v6）
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
