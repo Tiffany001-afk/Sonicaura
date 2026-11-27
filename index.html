@@ -241,6 +241,7 @@
     .hidden { display: none !important; }
     button, input, select, textarea { font-family: inherit; }
     button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.42; }
 
     .card {
       background: var(--surface-card);
@@ -294,15 +295,15 @@
       transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
       text-decoration: none;
     }
-    .btn:hover { background: var(--surface-hover); border-color: var(--border-strong); }
-    .btn:active { transform: scale(0.97); }
+    .btn:hover:not(:disabled) { background: var(--surface-hover); border-color: var(--border-strong); }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
     .btn-primary {
       background: var(--btn-primary-bg);
       color: var(--btn-primary-text);
       border: 1px solid transparent;
       box-shadow: 0 8px 20px -6px var(--accent-glow);
     }
-    .btn-primary:hover { filter: brightness(1.08); background: var(--btn-primary-bg); border-color: transparent; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--btn-primary-bg); border-color: transparent; }
     .btn-danger {
       background: var(--danger-bg);
       color: var(--danger-text);
@@ -498,7 +499,6 @@
       padding: 20px 18px 36px;
     }
 
-    /* 整合式單一大卡片 */
     .unified-player-card {
       display: grid;
       grid-template-columns: 1fr;
@@ -638,7 +638,7 @@
       font-size: 14px;
     }
 
-    /* 右半部：同步歌詞面板（精巧固定高度 + 嚴格內部捲動） */
+    /* 右半部：同步歌詞面板 */
     .lyrics-pane {
       padding: 20px 22px;
       display: flex;
@@ -682,7 +682,6 @@
       gap: 6px;
     }
 
-    /* 固定高度的歌詞捲動區（手機 190px、電腦 230px），絕不撐開外層頁面 */
     #lyricsContainer {
       position: relative;
       height: 190px;
@@ -734,9 +733,7 @@
       margin-right: 6px;
       opacity: 0.7;
     }
-    .lyric-orig {
-      display: block;
-    }
+    .lyric-orig { display: block; }
     .lyric-trans {
       display: block;
       margin-top: 3px;
@@ -985,7 +982,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 280px;
+      max-height: 360px;
       overflow-y: auto;
       padding-right: 4px;
     }
@@ -1014,6 +1011,21 @@
       object-fit: cover;
       flex-shrink: 0;
       background: var(--surface-hover);
+    }
+    .pagination-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+    .pagination-info {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
     }
     .platform-grid {
       display: grid;
@@ -1097,7 +1109,7 @@
     #immersiveLyricsBody .lyric-trans { font-size: 16px; margin-top: 6px; }
     #immersiveLyricsBody .lyric-line.active .lyric-trans { font-size: 19px; }
 
-    /* 主題選擇格 */
+    /* 語言 & 主題選擇格 */
     .lang-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -1214,7 +1226,7 @@
   <audio id="mainAudio" crossorigin="anonymous"></audio>
   <audio id="previewAudio" crossorigin="anonymous"></audio>
 
-  <!-- 主應用程式容器（初始即可見，z-index: 10） -->
+  <!-- 主應用程式容器（z-index: 10） -->
   <div id="appShell">
 
     <!-- 頂部導覽列 -->
@@ -1389,7 +1401,7 @@
             <div id="queueContainer" class="list-stack"></div>
           </div>
 
-          <!-- 右欄：📂 歷史加入歌曲（原「播放清單」） -->
+          <!-- 右欄：📂 歷史加入歌曲 -->
           <div id="playlistDropZone" class="card playlist-card">
             <div class="section-head">
               <h3>
@@ -1495,14 +1507,21 @@
 
               <div class="chip-row">
                 <button type="button" class="btn btn-sm" onclick="quickSearch('Brian Eno Ambient')">Brian Eno</button>
-                <button type="button" class="btn btn-sm" onclick="quickSearch('Coldplay Fix You')">Coldplay</button>
-                <button type="button" class="btn btn-sm" onclick="quickSearch('Daft Punk Instant Crush')">Daft Punk</button>
-                <button type="button" class="btn btn-sm" onclick="quickSearch('Sigur Rós Hoppípolla')">Sigur Rós</button>
-                <button type="button" class="btn btn-sm" onclick="quickSearch('Nils Frahm Says')">Nils Frahm</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Coldplay')">Coldplay</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Daft Punk')">Daft Punk</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Sigur Rós')">Sigur Rós</button>
+                <button type="button" class="btn btn-sm" onclick="quickSearch('Nils Frahm')">Nils Frahm</button>
               </div>
 
               <div id="itunesResultsList" class="result-list">
                 <p class="lyrics-status" style="text-align:center; padding:18px 0;" data-i18n="itunesEmptyHint">輸入關鍵字或點擊上方歐美快捷標籤即可搜尋並試聽</p>
+              </div>
+
+              <!-- 分頁導覽列（上一頁 / 頁碼 / 下一頁） -->
+              <div id="itunesPagination" class="pagination-bar hidden">
+                <button id="itunesPrevBtn" type="button" class="btn btn-sm" onclick="changeItunesPage(-1)" data-i18n="prevPageBtn">◀ 上一頁</button>
+                <span id="itunesPageInfo" class="pagination-info">第 1 / 1 頁</span>
+                <button id="itunesNextBtn" type="button" class="btn btn-sm" onclick="changeItunesPage(1)" data-i18n="nextPageBtn">下一頁 ▶</button>
               </div>
             </div>
 
@@ -1821,6 +1840,10 @@
         itunesPlaceholder: '輸入歌名、歌手或環境音樂（如 Brian Eno, Coldplay, Sigur Rós）...',
         searchBtn: '搜尋',
         itunesEmptyHint: '輸入關鍵字或點擊上方歐美快捷標籤即可搜尋並試聽',
+        previewBtn: '▶ 試聽',
+        loadPlayerBtn: '載入播放器',
+        prevPageBtn: '◀ 上一頁',
+        nextPageBtn: '下一頁 ▶',
         crossHubTitle: '🚀 跨平台音樂搜尋中心',
         crossHubSub: '一鍵跳轉至 YouTube、YouTube Music、Apple Music、Spotify、KKBOX',
         batchOpenBtn: '批次開啟已勾選平台',
@@ -1931,6 +1954,10 @@
         itunesPlaceholder: '输入歌名、歌手或环境音乐（如 Brian Eno, Coldplay, Sigur Rós）...',
         searchBtn: '搜索',
         itunesEmptyHint: '输入关键词或点击上方欧美快捷标签即可搜索并试听',
+        previewBtn: '▶ 试听',
+        loadPlayerBtn: '加载播放器',
+        prevPageBtn: '◀ 上一页',
+        nextPageBtn: '下一页 ▶',
         crossHubTitle: '🚀 跨平台音乐搜索中心',
         crossHubSub: '一键跳转至 YouTube、YouTube Music、Apple Music、Spotify、KKBOX',
         batchOpenBtn: '批量打开已勾选平台',
@@ -2041,6 +2068,10 @@
         itunesPlaceholder: 'Search song, artist, or ambient (e.g., Brian Eno, Coldplay, Sigur Rós)...',
         searchBtn: 'Search',
         itunesEmptyHint: 'Enter keywords or click a quick tag above to search & preview',
+        previewBtn: '▶ Preview',
+        loadPlayerBtn: 'Load Track',
+        prevPageBtn: '◀ Prev',
+        nextPageBtn: 'Next ▶',
         crossHubTitle: '🚀 Cross-Platform Music Hub',
         crossHubSub: 'Jump directly to YouTube, YouTube Music, Apple Music, Spotify, and KKBOX',
         batchOpenBtn: 'Open Selected',
@@ -2151,6 +2182,10 @@
         itunesPlaceholder: '曲名・アーティスト・アンビエントを検索（例：Brian Eno, Coldplay）...',
         searchBtn: '検索',
         itunesEmptyHint: 'キーワードを入力するか上のタグから検索・試聴できます',
+        previewBtn: '▶ 試聴',
+        loadPlayerBtn: '読込',
+        prevPageBtn: '◀ 前へ',
+        nextPageBtn: '次へ ▶',
         crossHubTitle: '🚀 クロスプラットフォーム検索',
         crossHubSub: 'YouTube・YouTube Music・Apple Music・Spotify・KKBOX へワンクリック移動',
         batchOpenBtn: '選択先をまとめて開く',
@@ -2226,8 +2261,8 @@
     const state = {
       tracks: [],
       currentIndex: 0,
-      queue: [],          // 連續歌曲清單（儲存 track.id 陣列）
-      playMode: 'history', // 'history' | 'queue'
+      queue: [],
+      playMode: 'history',
       queuePos: -1,
       isLooping: false,
       lyricOffset: 0,
@@ -2241,6 +2276,8 @@
       currentTranslations: null,
       lrcCandidates: [],
       itunesResults: [],
+      itunesPage: 1,
+      itunesPageSize: 8,
       recCandidates: [],
       recordDuration: 10,
       isRecording: false,
@@ -2258,6 +2295,19 @@
     function t(key) {
       const dict = I18N[state.lang] || I18N['zh-TW'];
       return dict[key] !== undefined ? dict[key] : (I18N['zh-TW'][key] || key);
+    }
+
+    function formatPageInfoText(page, totalPages, totalItems) {
+      if (state.lang === 'en') {
+        return `Page ${page} / ${totalPages} (${totalItems} tracks)`;
+      }
+      if (state.lang === 'ja') {
+        return `${page} / ${totalPages} ページ（全 ${totalItems} 曲）`;
+      }
+      if (state.lang === 'zh-CN') {
+        return `第 ${page} / ${totalPages} 页 · 共 ${totalItems} 首`;
+      }
+      return `第 ${page} / ${totalPages} 頁 · 共 ${totalItems} 首`;
     }
 
     function applyLanguage(lang, notify) {
@@ -2305,6 +2355,7 @@
       if (state.tracks.length) renderPlaylist();
       renderQueue();
       renderPlatformCards();
+      if (state.itunesResults.length) renderItunesPage();
       if (state.parsedLyrics.length) renderLyricsDOM(false);
 
       if (notify) showToast(t('toastLangChanged'));
@@ -2527,8 +2578,8 @@
               </div>
             </div>
             <div class="track-item-actions">
-              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, -1)" title="上移" ${qIdx === 0 ? 'disabled style="opacity:0.4;"' : ''}>↑</button>
-              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, 1)" title="下移" ${qIdx === state.queue.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>↓</button>
+              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, -1)" title="上移" ${qIdx === 0 ? 'disabled' : ''}>↑</button>
+              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, 1)" title="下移" ${qIdx === state.queue.length - 1 ? 'disabled' : ''}>↓</button>
               <button type="button" class="btn btn-xs btn-danger" onclick="removeFromQueue(${qIdx})" title="移除">✕</button>
             </div>
           </div>
@@ -2757,7 +2808,7 @@
     }
 
     /* ========================================================================
-       7. 嚴格容器內捲動（絕不使用 scrollIntoView）與精準 LRC 時間軸引擎
+       7. 嚴格容器內捲動與精準 LRC 時間軸引擎
        ======================================================================== */
     function scrollContainerToElement(container, el) {
       if (!container || !el) return;
@@ -3374,7 +3425,7 @@
             document.getElementById('recognitionEngineBadge').textContent = 'AudD 聲紋命中';
             document.getElementById('recordStatusText').textContent = '辨識成功：' + r.title + ' - ' + r.artist;
             document.getElementById('aiTranscriptInput').value = r.title + ' ' + r.artist;
-            const verified = await queryItunesMultiRegion(r.title + ' ' + r.artist, 'EU_US');
+            const verified = await queryItunesMultiRegion(r.title + ' ' + r.artist, 'EU_US', 6);
             renderCandidateCards(verified.length ? verified.slice(0, 4) : [{ title: r.title, artist: r.artist, previewUrl: '', cover: '', source: 'AudD' }]);
             return;
           }
@@ -3432,7 +3483,7 @@
         }
       } catch (e) {}
 
-      const tracks = await queryItunesMultiRegion(searchQuery, 'EU_US');
+      const tracks = await queryItunesMultiRegion(searchQuery, 'EU_US', 6);
       renderCandidateCards(tracks.slice(0, 4));
     }
 
@@ -3475,16 +3526,17 @@
     }
 
     /* ========================================================================
-       10. 歐美跨區 iTunes 搜尋 & 五大平台搜尋中心
+       10. 歐美跨區 iTunes 搜尋（擴充筆數 + 上一頁／下一頁分頁）& 五大平台中心
        ======================================================================== */
-    async function queryItunesMultiRegion(term, region) {
+    async function queryItunesMultiRegion(term, region, customLimit) {
       const countries = region === 'EU_US' ? ['US', 'GB', 'DE'] : [region];
+      const perCountryLimit = customLimit || (region === 'EU_US' ? 25 : 50);
       const results = [];
       const seen = new Set();
 
       await Promise.all(countries.map(async (c) => {
         try {
-          const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(term) + '&entity=song&limit=6&country=' + c);
+          const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(term) + '&entity=song&limit=' + perCountryLimit + '&country=' + c);
           const data = await res.json();
           (data.results || []).forEach(r => {
             const key = (r.trackName || '').toLowerCase() + '__' + (r.artistName || '').toLowerCase();
@@ -3514,6 +3566,9 @@
       if (!term) return;
       const region = document.getElementById('regionSelect').value;
       const box = document.getElementById('itunesResultsList');
+      const pager = document.getElementById('itunesPagination');
+
+      pager.classList.add('hidden');
       box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:18px 0;">正在搜尋 ' + (region === 'EU_US' ? '歐美跨區 (US/GB/DE)' : region) + ' 曲庫...</p>';
 
       document.getElementById('crossPlatformInput').value = term;
@@ -3521,26 +3576,66 @@
 
       const items = await queryItunesMultiRegion(term, region);
       state.itunesResults = items;
+      state.itunesPage = 1;
 
       if (!items.length) {
         box.innerHTML = '<p class="lyrics-status" style="text-align:center; padding:18px 0;">找不到相符曲目，請嘗試其他關鍵字或切換區域。</p>';
         return;
       }
-      box.innerHTML = items.map((item, idx) => `
-        <div class="result-item">
-          <div class="result-left">
-            <img src="${escapeHtml(item.cover)}" alt="封面" class="result-cover" />
-            <div style="min-width:0;">
-              <p class="track-item-title">${escapeHtml(item.title)}</p>
-              <p class="track-item-sub">${escapeHtml(item.artist)} · ${escapeHtml(item.source)}</p>
+
+      renderItunesPage();
+    }
+
+    function renderItunesPage() {
+      const box = document.getElementById('itunesResultsList');
+      const pager = document.getElementById('itunesPagination');
+      const total = state.itunesResults.length;
+
+      if (!total) {
+        pager.classList.add('hidden');
+        return;
+      }
+
+      const pageSize = state.itunesPageSize;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      state.itunesPage = Math.min(Math.max(1, state.itunesPage), totalPages);
+
+      const startIdx = (state.itunesPage - 1) * pageSize;
+      const slice = state.itunesResults.slice(startIdx, startIdx + pageSize);
+
+      box.innerHTML = slice.map((item, localIdx) => {
+        const globalIdx = startIdx + localIdx;
+        return `
+          <div class="result-item">
+            <div class="result-left">
+              <img src="${escapeHtml(item.cover)}" alt="封面" class="result-cover" />
+              <div style="min-width:0;">
+                <p class="track-item-title">${globalIdx + 1}. ${escapeHtml(item.title)}</p>
+                <p class="track-item-sub">${escapeHtml(item.artist)} · ${escapeHtml(item.source)}</p>
+              </div>
+            </div>
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+              ${item.previewUrl ? `<button type="button" class="btn btn-sm" onclick="togglePreviewByUrl('${encodeURI(item.previewUrl)}')">${t('previewBtn')}</button>` : ''}
+              <button type="button" class="btn btn-primary btn-sm" onclick="selectItunesResult(${globalIdx})">${t('loadPlayerBtn')}</button>
             </div>
           </div>
-          <div style="display:flex; gap:6px; flex-shrink:0;">
-            ${item.previewUrl ? `<button type="button" class="btn btn-sm" onclick="togglePreviewByUrl('${encodeURI(item.previewUrl)}')">▶ 試聽</button>` : ''}
-            <button type="button" class="btn btn-primary btn-sm" onclick="selectItunesResult(${idx})">載入播放器</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+
+      box.scrollTop = 0;
+
+      pager.classList.remove('hidden');
+      document.getElementById('itunesPageInfo').textContent = formatPageInfoText(state.itunesPage, totalPages, total);
+      document.getElementById('itunesPrevBtn').disabled = state.itunesPage <= 1;
+      document.getElementById('itunesNextBtn').disabled = state.itunesPage >= totalPages;
+    }
+
+    function changeItunesPage(delta) {
+      const totalPages = Math.max(1, Math.ceil(state.itunesResults.length / state.itunesPageSize));
+      const next = state.itunesPage + delta;
+      if (next < 1 || next > totalPages) return;
+      state.itunesPage = next;
+      renderItunesPage();
     }
 
     function selectItunesResult(idx) {

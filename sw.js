@@ -1,11 +1,11 @@
-const CACHE_NAME = 'sonicaura-v3';
+const CACHE_NAME = 'sonicaura-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json'
 ];
 
-// 安裝階段：預先快取核心檔案並立即啟用新版 SW
+// 安裝階段：預先快取核心檔案並立即啟用新版 Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 啟用階段：自動清除舊版快取（如 sonicaura-v1、sonicaura-v2）
+// 啟用階段：自動清除舊版快取（如 sonicaura-v1 ~ v3）
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
