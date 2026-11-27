@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sonicaura-v2';
+const CACHE_NAME = 'sonicaura-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 啟用階段：自動清除舊版快取（如 sonicaura-v1）
+// 啟用階段：自動清除舊版快取（如 sonicaura-v1、sonicaura-v2）
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>

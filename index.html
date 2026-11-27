@@ -309,6 +309,7 @@
       border: 1px solid rgba(244, 63, 94, 0.38);
     }
     .btn-sm { padding: 5px 10px; font-size: 11px; border-radius: 10px; }
+    .btn-xs { padding: 3px 7px; font-size: 11px; border-radius: 8px; }
     .btn-lg {
       padding: 12px 20px;
       font-size: 15px;
@@ -770,8 +771,20 @@
     }
 
     /* ========================================================================
-       6. 播放清單與拖放匯入區
+       6. 下方雙欄：連續歌曲清單 + 歷史加入歌曲
        ======================================================================== */
+    .lists-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (min-width: 900px) {
+      .lists-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     .playlist-card {
       padding: 18px 20px;
       border: 2px dashed transparent;
@@ -793,12 +806,16 @@
       margin: 0;
       font-size: 15px;
       font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
-    .playlist-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 10px;
-      max-height: 240px;
+    .list-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
       overflow-y: auto;
       padding-right: 4px;
       margin-top: 10px;
@@ -806,7 +823,7 @@
     .track-item {
       width: 100%;
       text-align: left;
-      padding: 11px 14px;
+      padding: 10px 12px;
       border-radius: 15px;
       background: var(--surface-subtle);
       border: 1px solid var(--border-color);
@@ -821,6 +838,32 @@
     .track-item.active {
       background: var(--accent-soft);
       border-color: var(--border-strong);
+    }
+    .track-item-click {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+      cursor: pointer;
+    }
+    .queue-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--surface-hover);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .track-item.active .queue-num {
+      background: var(--accent);
+      color: #ffffff;
     }
     .track-item-info { min-width: 0; flex: 1; }
     .track-item-title {
@@ -838,6 +881,12 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .track-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
     /* ========================================================================
@@ -1232,7 +1281,10 @@
                 </div>
 
                 <div class="track-meta">
-                  <span id="trackSourceBadge" class="badge">內建合成示範曲</span>
+                  <div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px;">
+                    <span id="trackSourceBadge" class="badge">內建合成示範曲</span>
+                    <span id="playerQueueBadge" class="badge badge-success hidden" data-i18n="queueActiveBadge">連續播放中</span>
+                  </div>
                   <h2 id="trackTitle" class="track-title">Starlight Drift (示範曲)</h2>
                   <p id="trackArtist" class="track-artist">SonicAura Ambient</p>
                   <button type="button" class="btn btn-sm" onclick="searchCurrentTrackCrossPlatform()" data-i18n="crossSearchCurrent">
@@ -1316,13 +1368,39 @@
           </div>
         </div>
 
-        <!-- 下方區塊：播放清單 & 本地檔案拖放匯入 -->
-        <div id="playlistDropZone" class="card playlist-card">
-          <div class="section-head">
-            <h3><span data-i18n="playlistTitle">📂 播放清單</span> (<span id="playlistCount">3</span>)</h3>
+        <!-- 下方雙欄：連續歌曲清單 + 歷史加入歌曲 -->
+        <div class="lists-grid">
+
+          <!-- 左欄：🔁 連續歌曲清單 -->
+          <div id="queueDropZone" class="card playlist-card">
+            <div class="section-head">
+              <h3>
+                <span data-i18n="queueTitle">🔁 連續歌曲清單</span>
+                <span>(<span id="queueCount">0</span>)</span>
+                <span id="queueModeBadge" class="badge badge-success hidden" data-i18n="queueActiveBadge">連續播放中</span>
+              </h3>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="startContinuousPlay()" data-i18n="queuePlayBtn">▶ 開始連續播放</button>
+                <button type="button" class="btn btn-sm" onclick="addAllHistoryToQueue()" data-i18n="queueAddAllBtn">＋ 全部加入</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="clearQueue()" data-i18n="queueClearBtn">清空</button>
+              </div>
+            </div>
+            <p class="lyrics-status" style="margin:0;" data-i18n="queueHint">加入多首歌曲後將照順序循環不斷播放；也可直接拖放音訊檔至此加入。</p>
+            <div id="queueContainer" class="list-stack"></div>
           </div>
-          <p class="lyrics-status" style="margin:0;" data-i18n="playlistHint">支援拖放 MP3 / WAV / M4A / OGG / FLAC 與 .lrc 歌詞檔；匯入時將自動清洗檔名雜訊並智慧拆解「歌手 - 歌名」。</p>
-          <div id="playlistContainer" class="playlist-grid"></div>
+
+          <!-- 右欄：📂 歷史加入歌曲（原「播放清單」） -->
+          <div id="playlistDropZone" class="card playlist-card">
+            <div class="section-head">
+              <h3>
+                <span data-i18n="playlistTitle">📂 歷史加入歌曲</span>
+                <span>(<span id="playlistCount">3</span>)</span>
+              </h3>
+            </div>
+            <p class="lyrics-status" style="margin:0;" data-i18n="playlistHint">支援拖放 MP3 / WAV / M4A / OGG / FLAC 與 .lrc 歌詞檔；匯入時將自動清洗檔名雜訊並智慧拆解「歌手 - 歌名」。</p>
+            <div id="playlistContainer" class="list-stack"></div>
+          </div>
+
         </div>
       </section>
 
@@ -1711,7 +1789,16 @@
         offsetPrefix: '偏移 ',
         alignNowBtn: '📌 對齊目前時間',
         alignNowTitle: '先點選要對齊的歌詞行，再點此按鈕一鍵校正時差',
-        playlistTitle: '📂 播放清單',
+        queueTitle: '🔁 連續歌曲清單',
+        queueActiveBadge: '連續播放中',
+        queuePlayBtn: '▶ 開始連續播放',
+        queueAddAllBtn: '＋ 全部加入',
+        queueClearBtn: '清空',
+        queueHint: '加入多首歌曲後將照順序循環不斷播放；也可直接拖放音訊檔至此加入。',
+        queueEmpty: '尚無連續歌曲，請從「歷史加入歌曲」點擊「＋ 加入連續」加入多首曲目。',
+        addToQueueBtn: '＋ 加入連續',
+        inQueueBtn: '✓ 已加入',
+        playlistTitle: '📂 歷史加入歌曲',
         playlistHint: '支援拖放 MP3 / WAV / M4A / OGG / FLAC 與 .lrc 歌詞檔；匯入時將自動清洗檔名雜訊並智慧拆解「歌手 - 歌名」。',
         recTitle: '🎙️ 環境背景音樂辨識',
         recSub: '純淨收音管線 · AudD 聲紋 + Gemini AI 雙引擎',
@@ -1812,7 +1899,16 @@
         offsetPrefix: '偏移 ',
         alignNowBtn: '📌 对齐当前时间',
         alignNowTitle: '先点选要对齐的歌词行，再点此按钮一键校正时差',
-        playlistTitle: '📂 播放列表',
+        queueTitle: '🔁 连续歌曲列表',
+        queueActiveBadge: '连续播放中',
+        queuePlayBtn: '▶ 开始连续播放',
+        queueAddAllBtn: '＋ 全部加入',
+        queueClearBtn: '清空',
+        queueHint: '加入多首歌曲后将照顺序循环不断播放；也可直接拖放音频文件至此加入。',
+        queueEmpty: '暂无连续歌曲，请从「历史加入歌曲」点击「＋ 加入连续」加入多首曲目。',
+        addToQueueBtn: '＋ 加入连续',
+        inQueueBtn: '✓ 已加入',
+        playlistTitle: '📂 历史加入歌曲',
         playlistHint: '支持拖放 MP3 / WAV / M4A / OGG / FLAC 与 .lrc 歌词文件；导入时将自动清洗文件名杂讯并智能拆解「歌手 - 歌名」。',
         recTitle: '🎙️ 环境背景音乐识别',
         recSub: '纯净收音管线 · AudD 声纹 + Gemini AI 双引擎',
@@ -1913,7 +2009,16 @@
         offsetPrefix: 'Offset ',
         alignNowBtn: '📌 Align to Now',
         alignNowTitle: 'Select a lyric line first, then click to align with current playback time',
-        playlistTitle: '📂 Playlist',
+        queueTitle: '🔁 Continuous Playlist',
+        queueActiveBadge: 'Playing Queue',
+        queuePlayBtn: '▶ Play Queue',
+        queueAddAllBtn: '＋ Add All',
+        queueClearBtn: 'Clear',
+        queueHint: 'Songs here play continuously in order and loop automatically. You can also drag & drop audio files here.',
+        queueEmpty: 'Queue is empty. Click "＋ Queue" in Added Songs History to add tracks.',
+        addToQueueBtn: '＋ Queue',
+        inQueueBtn: '✓ Queued',
+        playlistTitle: '📂 Added Songs History',
         playlistHint: 'Drag & drop MP3 / WAV / M4A / OGG / FLAC or .lrc files. Filenames are automatically cleaned into "Artist - Title".',
         recTitle: '🎙️ Ambient Music Recognition',
         recSub: 'Clean Audio Capture · AudD Fingerprint + Gemini AI Dual Engine',
@@ -2014,7 +2119,16 @@
         offsetPrefix: 'ズレ ',
         alignNowBtn: '📌 現在時刻に合わせる',
         alignNowTitle: '歌詞行を選択してからクリックすると再生位置に合わせます',
-        playlistTitle: '📂 プレイリスト',
+        queueTitle: '🔁 連続再生リスト',
+        queueActiveBadge: '連続再生中',
+        queuePlayBtn: '▶ 連続再生',
+        queueAddAllBtn: '＋ すべて追加',
+        queueClearBtn: 'クリア',
+        queueHint: 'ここに追加した曲は順番に連続ループ再生されます。音声ファイルのドロップも可能です。',
+        queueEmpty: '連続リストは空です。「追加履歴」から「＋ 連続追加」で曲を追加してください。',
+        addToQueueBtn: '＋ 連続追加',
+        inQueueBtn: '✓ 追加済',
+        playlistTitle: '📂 追加履歴',
         playlistHint: 'MP3 / WAV / M4A / OGG / FLAC や .lrc ファイルをドラッグ＆ドロップで追加できます。',
         recTitle: '🎙️ 環境音の楽曲認識',
         recSub: 'ピュア収音 · AudD フィンガープリント + Gemini AI デュアルエンジン',
@@ -2104,9 +2218,17 @@
       { id: 'magic-purple', name: '魔幻紫', desc: '深紫羅蘭 · 魔幻紫晶', dot: '#c084fc', preview: 'linear-gradient(135deg,#0d041c,#7e22ce,#e879f9)', viz: ['#c084fc','#a855f7','#e879f9'] }
     ];
 
+    let trackIdCounter = 1;
+    function nextTrackId() {
+      return 'trk_' + (trackIdCounter++);
+    }
+
     const state = {
       tracks: [],
       currentIndex: 0,
+      queue: [],          // 連續歌曲清單（儲存 track.id 陣列）
+      playMode: 'history', // 'history' | 'queue'
+      queuePos: -1,
       isLooping: false,
       lyricOffset: 0,
       parsedLyrics: [],
@@ -2160,7 +2282,6 @@
         if (key) el.setAttribute('title', t(key));
       });
 
-      // 依目前語系更新動態文字與快取翻譯
       const themeInfo = (I18N[lang].themes && I18N[lang].themes[state.themeId]) || ['極致黑', ''];
       const badgeEl = document.getElementById('currentThemeBadge');
       if (badgeEl) badgeEl.textContent = themeInfo[0];
@@ -2182,6 +2303,7 @@
       updateTranslateButtons();
       renderThemeGrid();
       if (state.tracks.length) renderPlaylist();
+      renderQueue();
       renderPlatformCards();
       if (state.parsedLyrics.length) renderLyricsDOM(false);
 
@@ -2273,14 +2395,14 @@
         view.setUint32(40, numSamples * 2, true);
 
         for (let i = 0; i < numSamples; i++) {
-          const t = i / sampleRate;
-          const noteIdx = Math.floor(t / tempoSec);
+          const tSec = i / sampleRate;
+          const noteIdx = Math.floor(tSec / tempoSec);
           const freq = notes[noteIdx] || 0;
           let sample = 0;
           if (freq > 0) {
-            const localT = t - noteIdx * tempoSec;
+            const localT = tSec - noteIdx * tempoSec;
             const env = Math.min(1, localT * 20) * Math.exp(-localT * 2.4);
-            const phase = 2 * Math.PI * freq * t;
+            const phase = 2 * Math.PI * freq * tSec;
             sample = wave === 'triangle'
               ? (2 / Math.PI) * Math.asin(Math.sin(phase)) * 0.34 * env
               : (Math.sin(phase) * 0.28 + Math.sin(phase * 2) * 0.07) * env;
@@ -2296,6 +2418,7 @@
     function initDemoTracks() {
       state.tracks = [
         {
+          id: nextTrackId(),
           title: 'Starlight Drift (示範曲)',
           artist: 'SonicAura Ambient',
           source: '內建合成示範曲 · 英文',
@@ -2307,6 +2430,7 @@
 [00:10.80]Click the translate button to feel the melody in Chinese`
         },
         {
+          id: nextTrackId(),
           title: 'Midnight Neon Pulse (示範曲)',
           artist: 'SonicAura Synthwave',
           source: '內建合成示範曲 · 日文',
@@ -2318,6 +2442,7 @@
 [00:09.10]明日へと続く新しい風を感じよう`
         },
         {
+          id: nextTrackId(),
           title: 'Morning Mist Piano (示範曲)',
           artist: 'SonicAura Lo-Fi',
           source: '內建合成示範曲 · 中文',
@@ -2329,34 +2454,183 @@
         }
       ];
       renderPlaylist();
-      loadTrack(0, false);
+      renderQueue();
+      loadTrack(0, false, 'history');
     }
 
     /* ========================================================================
-       6. 播放器控制與本地檔案匯入
+       6. 播放器控制、連續歌曲清單 & 歷史加入歌曲
        ======================================================================== */
+    function getTrackIndexById(id) {
+      return state.tracks.findIndex(item => item.id === id);
+    }
+
+    function updateQueueBadges() {
+      const active = state.playMode === 'queue' && state.queue.length > 0;
+      const b1 = document.getElementById('queueModeBadge');
+      const b2 = document.getElementById('playerQueueBadge');
+      if (b1) b1.classList.toggle('hidden', !active);
+      if (b2) b2.classList.toggle('hidden', !active);
+    }
+
     function renderPlaylist() {
       const container = document.getElementById('playlistContainer');
       document.getElementById('playlistCount').textContent = state.tracks.length;
+      const queueSet = new Set(state.queue);
+
       container.innerHTML = state.tracks.map((track, idx) => {
-        const active = idx === state.currentIndex;
+        const active = idx === state.currentIndex && state.playMode === 'history';
+        const inQueue = queueSet.has(track.id);
         return `
-          <button type="button" class="track-item ${active ? 'active' : ''}" onclick="loadTrack(${idx}, true)">
-            <div class="track-item-info">
-              <p class="track-item-title">${escapeHtml(track.title)}</p>
-              <p class="track-item-sub">${escapeHtml(track.artist || '未知歌手')} · ${escapeHtml(track.source || '本地檔案')}</p>
+          <div class="track-item ${active ? 'active' : ''}">
+            <div class="track-item-click" onclick="loadTrack(${idx}, true, 'history')">
+              <div class="track-item-info">
+                <p class="track-item-title">${escapeHtml(track.title)}</p>
+                <p class="track-item-sub">${escapeHtml(track.artist || '未知歌手')} · ${escapeHtml(track.source || '本地檔案')}</p>
+              </div>
+              <span style="font-size:11px; font-weight:700; color:${active ? 'var(--accent)' : 'var(--text-muted)'}; flex-shrink:0;">
+                ${active ? t('playingNow') : t('playLabel')}
+              </span>
             </div>
-            <span style="font-size:11px; font-weight:700; color:${active ? 'var(--accent)' : 'var(--text-muted)'}; flex-shrink:0;">
-              ${active ? t('playingNow') : t('playLabel')}
-            </span>
-          </button>
+            <div class="track-item-actions">
+              <button type="button" class="btn btn-xs ${inQueue ? 'btn-active' : 'btn-primary'}" onclick="addToQueue(${idx})">
+                ${inQueue ? t('inQueueBtn') : t('addToQueueBtn')}
+              </button>
+            </div>
+          </div>
         `;
       }).join('');
     }
 
-    function loadTrack(idx, autoPlay) {
+    function renderQueue() {
+      const container = document.getElementById('queueContainer');
+      document.getElementById('queueCount').textContent = state.queue.length;
+      updateQueueBadges();
+
+      if (!state.queue.length) {
+        container.innerHTML = `<p class="lyrics-status" style="text-align:center; padding:26px 8px;">${escapeHtml(t('queueEmpty'))}</p>`;
+        return;
+      }
+
+      container.innerHTML = state.queue.map((trackId, qIdx) => {
+        const trackIdx = getTrackIndexById(trackId);
+        const track = state.tracks[trackIdx];
+        if (!track) return '';
+        const isCurrent = state.playMode === 'queue' && state.queuePos === qIdx;
+        return `
+          <div class="track-item ${isCurrent ? 'active' : ''}">
+            <div class="track-item-click" onclick="playFromQueue(${qIdx})">
+              <span class="queue-num">${qIdx + 1}</span>
+              <div class="track-item-info">
+                <p class="track-item-title">${escapeHtml(track.title)}</p>
+                <p class="track-item-sub">${escapeHtml(track.artist || '未知歌手')}${isCurrent ? ' · ' + t('playingNow') : ''}</p>
+              </div>
+            </div>
+            <div class="track-item-actions">
+              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, -1)" title="上移" ${qIdx === 0 ? 'disabled style="opacity:0.4;"' : ''}>↑</button>
+              <button type="button" class="btn btn-xs" onclick="moveQueueItem(${qIdx}, 1)" title="下移" ${qIdx === state.queue.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>↓</button>
+              <button type="button" class="btn btn-xs btn-danger" onclick="removeFromQueue(${qIdx})" title="移除">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addToQueue(trackIdx) {
+      const track = state.tracks[trackIdx];
+      if (!track) return;
+      if (state.queue.includes(track.id)) {
+        showToast('「' + track.title + '」已在連續歌曲清單中');
+        return;
+      }
+      state.queue.push(track.id);
+      renderQueue();
+      renderPlaylist();
+      showToast('已加入連續歌曲清單：' + track.title);
+    }
+
+    function addAllHistoryToQueue() {
+      let added = 0;
+      state.tracks.forEach(track => {
+        if (!state.queue.includes(track.id)) {
+          state.queue.push(track.id);
+          added++;
+        }
+      });
+      renderQueue();
+      renderPlaylist();
+      if (added > 0) showToast('已將 ' + added + ' 首歌曲加入連續歌曲清單');
+      else showToast('所有歌曲皆已在連續歌曲清單中');
+    }
+
+    function removeFromQueue(qIdx) {
+      if (qIdx < 0 || qIdx >= state.queue.length) return;
+      state.queue.splice(qIdx, 1);
+      if (state.playMode === 'queue') {
+        if (state.queue.length === 0) {
+          state.playMode = 'history';
+          state.queuePos = -1;
+        } else if (qIdx < state.queuePos) {
+          state.queuePos--;
+        } else if (qIdx === state.queuePos) {
+          state.queuePos = Math.min(state.queuePos, state.queue.length - 1);
+        }
+      }
+      renderQueue();
+      renderPlaylist();
+    }
+
+    function moveQueueItem(qIdx, dir) {
+      const target = qIdx + dir;
+      if (target < 0 || target >= state.queue.length) return;
+      const tmp = state.queue[qIdx];
+      state.queue[qIdx] = state.queue[target];
+      state.queue[target] = tmp;
+
+      if (state.playMode === 'queue') {
+        if (state.queuePos === qIdx) state.queuePos = target;
+        else if (state.queuePos === target) state.queuePos = qIdx;
+      }
+      renderQueue();
+    }
+
+    function clearQueue() {
+      if (!state.queue.length) return;
+      state.queue = [];
+      state.playMode = 'history';
+      state.queuePos = -1;
+      renderQueue();
+      renderPlaylist();
+      showToast('已清空連續歌曲清單');
+    }
+
+    function startContinuousPlay() {
+      if (!state.queue.length) {
+        if (!state.tracks.length) return showToast('目前沒有可播放的歌曲');
+        addAllHistoryToQueue();
+      }
+      playFromQueue(0);
+    }
+
+    function playFromQueue(qIdx) {
+      if (qIdx < 0 || qIdx >= state.queue.length) return;
+      const trackIdx = getTrackIndexById(state.queue[qIdx]);
+      if (trackIdx < 0) return;
+      state.playMode = 'queue';
+      state.queuePos = qIdx;
+      loadTrack(trackIdx, true, 'queue');
+    }
+
+    function loadTrack(idx, autoPlay, mode) {
       if (idx < 0 || idx >= state.tracks.length) return;
       state.currentIndex = idx;
+      if (mode === 'history') {
+        state.playMode = 'history';
+        state.queuePos = -1;
+      } else if (mode === 'queue') {
+        state.playMode = 'queue';
+      }
+
       state.lyricOffset = 0;
       state.selectedLyricIdx = -1;
       updateOffsetLabel();
@@ -2385,6 +2659,7 @@
       }
 
       renderPlaylist();
+      renderQueue();
       if (autoPlay && track.url) {
         try { previewAudio.pause(); } catch (e) {}
         audio.play().catch(() => {});
@@ -2402,13 +2677,23 @@
     }
 
     function prevTrack() {
+      if (state.playMode === 'queue' && state.queue.length > 0) {
+        const prevPos = (state.queuePos - 1 + state.queue.length) % state.queue.length;
+        playFromQueue(prevPos);
+        return;
+      }
       if (!state.tracks.length) return;
-      loadTrack((state.currentIndex - 1 + state.tracks.length) % state.tracks.length, true);
+      loadTrack((state.currentIndex - 1 + state.tracks.length) % state.tracks.length, true, 'history');
     }
 
     function nextTrack() {
+      if (state.playMode === 'queue' && state.queue.length > 0) {
+        const nextPos = (state.queuePos + 1) % state.queue.length;
+        playFromQueue(nextPos);
+        return;
+      }
       if (!state.tracks.length) return;
-      loadTrack((state.currentIndex + 1) % state.tracks.length, true);
+      loadTrack((state.currentIndex + 1) % state.tracks.length, true, 'history');
     }
 
     function toggleLoop() {
@@ -2416,24 +2701,31 @@
       audio.loop = state.isLooping;
       const btn = document.getElementById('loopBtn');
       btn.classList.toggle('btn-active', state.isLooping);
-      btn.title = state.isLooping ? '單曲循環：開啟' : '單曲循環：關閉';
-      showToast(state.isLooping ? '已開啟單曲循環' : '已關閉單曲循環');
+      btn.title = state.isLooping ? t('loopOn') : t('loopOff');
+      showToast(state.isLooping ? t('loopOn') : t('loopOff'));
     }
 
-    function handleLocalFiles(files) {
+    function handleLocalFiles(files, alsoAddToQueue) {
       const list = Array.from(files || []);
       const lrcFiles = list.filter(f => /\.lrc$/i.test(f.name));
       const audioFiles = list.filter(f => /\.(mp3|wav|m4a|ogg|flac)$/i.test(f.name) || (f.type && f.type.startsWith('audio/')));
 
+      const newlyAddedIds = [];
       audioFiles.forEach(file => {
         const parsed = parseAudioFilename(file.name);
-        state.tracks.push({
+        const newTrack = {
+          id: nextTrackId(),
           title: parsed.title,
           artist: parsed.artist,
           source: '本地匯入',
           url: URL.createObjectURL(file),
           lrc: ''
-        });
+        };
+        state.tracks.push(newTrack);
+        newlyAddedIds.push(newTrack.id);
+        if (alsoAddToQueue) {
+          state.queue.push(newTrack.id);
+        }
       });
 
       lrcFiles.forEach(file => {
@@ -2452,8 +2744,15 @@
 
       if (audioFiles.length > 0) {
         renderPlaylist();
-        loadTrack(state.tracks.length - 1, true);
-        showToast('已匯入 ' + audioFiles.length + ' 首本地音訊（可點「🔍 搜尋歌詞」挑選同步歌詞）');
+        renderQueue();
+        if (alsoAddToQueue) {
+          const firstPos = state.queue.indexOf(newlyAddedIds[0]);
+          if (firstPos >= 0) playFromQueue(firstPos);
+          showToast('已匯入 ' + audioFiles.length + ' 首歌曲並加入連續歌曲清單');
+        } else {
+          loadTrack(state.tracks.length - 1, true, 'history');
+          showToast('已匯入 ' + audioFiles.length + ' 首本地音訊（可點「＋ 加入連續」加入連續播放）');
+        }
       }
     }
 
@@ -2481,7 +2780,6 @@
           matches.forEach(m => {
             const min = parseInt(m[1], 10);
             const sec = parseInt(m[2], 10);
-            // [mm:ss.xx] -> /100；[mm:ss.xxx] -> /1000
             const frac = m[3] ? parseInt(m[3], 10) / Math.pow(10, m[3].length) : 0;
             timed.push({ time: min * 60 + sec + frac, text });
           });
@@ -2631,7 +2929,7 @@
 
       state.isTranslating = true;
       updateTranslateButtons();
-      showToast('正在透過 AI 逐行翻譯歌詞為繁體中文...');
+      showToast('正在透過 AI 逐行翻譯歌詞...');
 
       try {
         const sourceLines = state.parsedLyrics.map(l => l.text);
@@ -2676,8 +2974,8 @@
         if (!Array.isArray(parsed)) throw new Error('Invalid translation array');
 
         const aligned = sourceLines.map((_, idx) => {
-          const t = parsed[idx];
-          return typeof t === 'string' ? t.trim() : '';
+          const lineTrans = parsed[idx];
+          return typeof lineTrans === 'string' ? lineTrans.trim() : '';
         });
 
         state.translationCache[cacheKey] = aligned;
@@ -2977,7 +3275,7 @@
         state.isRecording = true;
         document.getElementById('recordBtn').classList.add('recording');
         document.getElementById('recordBtnIcon').textContent = '⏹';
-        document.getElementById('recordBtnText').textContent = '停止收音';
+        document.getElementById('recordBtnText').textContent = t('stopRecBtn');
         drawSpectrumLoop();
 
         let remain = state.recordDuration;
@@ -2998,11 +3296,11 @@
       cancelAnimationFrame(vizRafId);
       try {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        if (micStream) micStream.getTracks().forEach(t => t.stop());
+        if (micStream) micStream.getTracks().forEach(tr => tr.stop());
       } catch (e) {}
       document.getElementById('recordBtn').classList.remove('recording');
       document.getElementById('recordBtnIcon').textContent = '🎙️';
-      document.getElementById('recordBtnText').textContent = '開始聽歌識曲';
+      document.getElementById('recordBtnText').textContent = t('startRecBtn');
       document.getElementById('recordStatusText').textContent = '收音完成，正在進行雙引擎辨識...';
     }
 
@@ -3011,7 +3309,7 @@
       if (!canvas || !analyserNode) return;
       const ctx = canvas.getContext('2d');
       const data = new Uint8Array(analyserNode.frequencyBinCount);
-      const theme = THEMES.find(t => t.id === state.themeId) || THEMES[0];
+      const theme = THEMES.find(th => th.id === state.themeId) || THEMES[0];
 
       const render = () => {
         if (!state.isRecording) return;
@@ -3265,6 +3563,7 @@
 
     function selectTrackToPlayer(item) {
       state.tracks.push({
+        id: nextTrackId(),
         title: item.title,
         artist: item.artist,
         cover: item.cover || '',
@@ -3275,14 +3574,14 @@
       document.getElementById('crossPlatformInput').value = item.title + ' ' + item.artist;
       renderPlatformCards();
       switchTab('player');
-      loadTrack(state.tracks.length - 1, true);
+      loadTrack(state.tracks.length - 1, true, 'history');
       showToast('已載入「' + item.title + '」，可點「🔍 搜尋歌詞」挑選同步歌詞');
     }
 
     function searchCurrentTrackCrossPlatform() {
-      const t = state.tracks[state.currentIndex];
-      if (!t) return;
-      document.getElementById('crossPlatformInput').value = (t.title.replace(/\(示範曲\)/g, '').trim() + ' ' + (t.artist || '')).trim();
+      const track = state.tracks[state.currentIndex];
+      if (!track) return;
+      document.getElementById('crossPlatformInput').value = (track.title.replace(/\(示範曲\)/g, '').trim() + ' ' + (track.artist || '')).trim();
       renderPlatformCards();
       switchTab('recognize');
     }
@@ -3503,15 +3802,21 @@
           audio.volume = parseFloat(e.target.value);
         });
 
-        // 本地音訊 / .lrc 匯入與拖放
+        // 本地音訊 / .lrc 匯入與拖放（歷史加入歌曲區）
         document.getElementById('localFileInput').addEventListener('change', (e) => {
-          handleLocalFiles(e.target.files);
+          handleLocalFiles(e.target.files, false);
           e.target.value = '';
         });
         const pDrop = document.getElementById('playlistDropZone');
         ['dragenter', 'dragover'].forEach(ev => pDrop.addEventListener(ev, (e) => { e.preventDefault(); pDrop.classList.add('drop-active'); }));
         ['dragleave', 'drop'].forEach(ev => pDrop.addEventListener(ev, (e) => { e.preventDefault(); pDrop.classList.remove('drop-active'); }));
-        pDrop.addEventListener('drop', (e) => handleLocalFiles(e.dataTransfer ? e.dataTransfer.files : []));
+        pDrop.addEventListener('drop', (e) => handleLocalFiles(e.dataTransfer ? e.dataTransfer.files : [], false));
+
+        // 拖放至連續歌曲清單區：同時匯入並加入連續清單
+        const qDrop = document.getElementById('queueDropZone');
+        ['dragenter', 'dragover'].forEach(ev => qDrop.addEventListener(ev, (e) => { e.preventDefault(); qDrop.classList.add('drop-active'); }));
+        ['dragleave', 'drop'].forEach(ev => qDrop.addEventListener(ev, (e) => { e.preventDefault(); qDrop.classList.remove('drop-active'); }));
+        qDrop.addEventListener('drop', (e) => handleLocalFiles(e.dataTransfer ? e.dataTransfer.files : [], true));
 
         // 背景圖片匯入、拖放與拉桿
         document.getElementById('bgFileInput').addEventListener('change', (e) => {
