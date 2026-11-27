@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sonicaura-v6';
+const CACHE_NAME = 'sonicaura-v7';
 const CORE_ASSETS = [
   './',
   './index.html',

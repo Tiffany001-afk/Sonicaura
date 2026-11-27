@@ -3512,42 +3512,30 @@
       } else if (state.isSyncedLyrics && state.activeLyricIdx >= 0) {
         const activeEl = box.querySelector(`[data-lrc-idx="${state.activeLyricIdx}"]`);
         if (activeEl) scrollContainerToElement(box, activeEl);
-        const isImmOpen = !document.getElementById('immersiveModal').classList.contains('hidden');
-        if (isImmOpen) {
-          const immActiveEl = immBox.querySelector(`[data-imm-idx="${state.activeLyricIdx}"]`);
-          if (immActiveEl) scrollContainerToElement(immBox, immActiveEl);
+    async function translateLinesFreeFallback(sourceLines, langCode) {
+      const tlMap = { 'zh-TW': 'zh-TW', 'zh-CN': 'zh-CN', 'en': 'en', 'ja': 'ja' };
+      const tl = tlMap[langCode] || 'zh-TW';
+      const result = new Array(sourceLines.length).fill('');
+      const chunkSize = 10;
+
+      for (let start = 0; start < sourceLines.length; start += chunkSize) {
+        const chunk = sourceLines.slice(start, start + chunkSize);
+        const joined = chunk.join('\n');
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' +
+          encodeURIComponent(tl) + '&dt=t&q=' + encodeURIComponent(joined);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Free translate HTTP ' + res.status);
+        const data = await res.json();
+        const combined = Array.isArray(data && data[0])
+          ? data[0].map(seg => (seg && seg[0]) ? seg[0] : '').join('')
+          : '';
+        const splitLines = combined.split(/\r?\n/);
+
+        for (let j = 0; j < chunk.length; j++) {
+          result[start + j] = (splitLines[j] || '').trim();
         }
       }
-    }
-
-    function updateTranslateButtons() {
-      const btns = [
-        document.getElementById('translateLyricsBtn'),
-        document.getElementById('immersiveTranslateBtn')
-      ].filter(Boolean);
-
-      const cacheKey = getLyricsCacheKey(state.parsedLyrics);
-      const hasCached = Boolean(cacheKey && state.translationCache[cacheKey]);
-
-      btns.forEach(btn => {
-        if (state.isTranslating) {
-          btn.textContent = t('translatingBtn');
-          btn.disabled = true;
-          btn.classList.add('btn-active');
-        } else if (state.showTranslation) {
-          btn.textContent = t('hideTransBtn');
-          btn.disabled = false;
-          btn.classList.add('btn-active');
-        } else if (hasCached) {
-          btn.textContent = t('showTransBtn');
-          btn.disabled = false;
-          btn.classList.remove('btn-active');
-        } else {
-          btn.textContent = t('translateBtn');
-          btn.disabled = false;
-          btn.classList.remove('btn-active');
-        }
-      });
+      return result;
     }
 
     async function toggleLyricsTranslation() {
@@ -3574,54 +3562,64 @@
 
       state.isTranslating = true;
       updateTranslateButtons();
-      showToast('正在透過 AI 逐行翻譯歌詞...');
+      showToast('正在逐行翻譯歌詞...');
 
       try {
         const sourceLines = state.parsedLyrics.map(l => l.text);
         const targetLangDesc = t('translatePromptLang');
         const apiKey = state.geminiKey || '';
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+        let aligned = null;
+        let usedFallback = false;
 
-        const payload = {
-          systemInstruction: {
-            parts: [{
-              text: 'You are a professional music lyric translator. Translate each line of the input string array into ' + targetLangDesc + '. If a line is already in the target language, keep it natural and concise. The output JSON string array MUST have the exact same length as the input array, matching line-by-line.'
-            }]
-          },
-          contents: [{
-            parts: [{
-              text: 'Translate the following ' + sourceLines.length + ' lines into ' + targetLangDesc + ' and return a JSON string array of the exact same length:\n' + JSON.stringify(sourceLines)
-            }]
-          }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: 'ARRAY',
-              items: { type: 'STRING' }
+        // 優先嘗試 Gemini AI 翻譯（預覽環境或已填入個人 Gemini API Key 時）
+        try {
+          const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+          const payload = {
+            systemInstruction: {
+              parts: [{
+                text: 'You are a professional music lyric translator. Translate each line of the input string array into ' + targetLangDesc + '. If a line is already in the target language, keep it natural and concise. The output JSON string array MUST have the exact same length as the input array, matching line-by-line.'
+              }]
+            },
+            contents: [{
+              parts: [{
+                text: 'Translate the following ' + sourceLines.length + ' lines into ' + targetLangDesc + ' and return a JSON string array of the exact same length:\n' + JSON.stringify(sourceLines)
+              }]
+            }],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              responseSchema: {
+                type: 'ARRAY',
+                items: { type: 'STRING' }
+              }
             }
-          }
-        };
+          };
 
-        const res = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }, 3);
+          const res = await fetchWithRetry(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }, apiKey ? 2 : 1);
 
-        const data = await res.json();
-        const rawJson = data && data.candidates && data.candidates[0] &&
-          data.candidates[0].content && data.candidates[0].content.parts &&
-          data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+          if (!res.ok) throw new Error('Gemini HTTP ' + res.status);
+          const data = await res.json();
+          const rawJson = data && data.candidates && data.candidates[0] &&
+            data.candidates[0].content && data.candidates[0].content.parts &&
+            data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
 
-        if (!rawJson) throw new Error('Empty translation response');
+          if (!rawJson) throw new Error('Empty translation response');
 
-        const parsed = JSON.parse(rawJson);
-        if (!Array.isArray(parsed)) throw new Error('Invalid translation array');
+          const parsed = JSON.parse(rawJson);
+          if (!Array.isArray(parsed)) throw new Error('Invalid translation array');
 
-        const aligned = sourceLines.map((_, idx) => {
-          const lineTrans = parsed[idx];
-          return typeof lineTrans === 'string' ? lineTrans.trim() : '';
-        });
+          aligned = sourceLines.map((_, idx) => {
+            const lineTrans = parsed[idx];
+            return typeof lineTrans === 'string' ? lineTrans.trim() : '';
+          });
+        } catch (geminiErr) {
+          // GitHub Pages 未填 Gemini Key 或呼叫失敗時，自動切換至免金鑰免費翻譯引擎
+          aligned = await translateLinesFreeFallback(sourceLines, state.lang);
+          usedFallback = true;
+        }
 
         state.translationCache[cacheKey] = aligned;
 
@@ -3629,10 +3627,12 @@
           state.currentTranslations = aligned;
           state.showTranslation = true;
           renderLyricsDOM(false);
-          showToast('歌詞翻譯完成！已切換為雙語同步顯示');
+          showToast(usedFallback
+            ? '已完成歌詞翻譯（免金鑰引擎）！若填入 Gemini API Key 可享 AI 詩意翻譯'
+            : 'AI 歌詞翻譯完成！已切換為雙語同步顯示');
         }
       } catch (err) {
-        showToast('翻譯歌詞時發生錯誤，請稍後再試');
+        showToast('翻譯歌詞時發生錯誤，請檢查網路或至 ⚙️ 設定填入 Gemini API Key');
       } finally {
         state.isTranslating = false;
         updateTranslateButtons();
@@ -4378,16 +4378,6 @@
       safeSetLS('sa_audd_token', state.auddToken);
       safeSetLS('sa_audd_test', state.auddUseTest ? 'true' : 'false');
       showToast('API 引擎設定已安全儲存於本機瀏覽器');
-    }
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').classList.add('hidden');
-    }
-    function saveAuddSettings() {
-      state.auddToken = document.getElementById('auddTokenInput').value.trim();
-      state.auddUseTest = document.getElementById('auddTestToggle').checked;
-      safeSetLS('sa_audd_token', state.auddToken);
-      safeSetLS('sa_audd_test', state.auddUseTest ? 'true' : 'false');
-      showToast('AudD 辨識引擎設定已儲存');
     }
 
     function renderThemeGrid() {
