@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sonicaura-v7';
+const CACHE_NAME = 'sonicaura-v8';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 啟用階段：自動清除舊版快取（如 sonicaura-v1 ~ v6）
+// 啟用階段：自動清除舊版快取（sonicaura-v1 ~ v7）
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 請求攔截：僅快取同源靜態資源，放行所有外部服務（YouTube IFrame API / noembed / iTunes / LRCLIB / AudD / Gemini）
+// 請求攔截：僅快取同源靜態資源，放行所有外部服務（YouTube / iTunes / LRCLIB / AudD / Gemini / 翻譯 API）
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
