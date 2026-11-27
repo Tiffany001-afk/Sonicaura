@@ -638,6 +638,52 @@
       font-size: 14px;
     }
 
+    /* YouTube 完整播放輸入列與內嵌視訊區 */
+    .yt-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-color);
+    }
+    .yt-bar .input {
+      padding: 7px 11px;
+      font-size: 12px;
+    }
+    .yt-embed-wrap {
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000000;
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.65);
+    }
+    .yt-embed-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface-card-strong);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .yt-iframe-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: 190px;
+      background: #000000;
+    }
+    .yt-iframe-box iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
     /* 右半部：同步歌詞面板 */
     .lyrics-pane {
       padding: 20px 22px;
@@ -1312,6 +1358,24 @@
               </label>
             </div>
 
+            <!-- YouTube 完整播放快速載入列（免 API Key） -->
+            <div class="yt-bar">
+              <span style="font-size:15px; flex-shrink:0;" aria-hidden="true">🎬</span>
+              <input id="ytUrlInput" type="text" class="input" data-i18n-placeholder="ytPlaceholder" placeholder="貼上 YouTube / YT Music 連結或影片 ID（完整播放＋歌詞同步）..." onkeydown="if(event.key==='Enter') addYoutubeTrackFromInput()" />
+              <button id="ytLoadBtn" type="button" class="btn btn-primary btn-sm" style="white-space:nowrap; flex-shrink:0;" onclick="addYoutubeTrackFromInput()" data-i18n="ytLoadBtn">載入完整版</button>
+            </div>
+
+            <!-- YouTube 內嵌播放器視窗（播放 YT 曲目時自動展開） -->
+            <div id="ytEmbedWrapper" class="yt-embed-wrap hidden">
+              <div class="yt-embed-head">
+                <span data-i18n="ytEmbedNote">🎬 YouTube 完整播放中（進度與歌詞即時同步）</span>
+                <a id="ytOpenExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-xs" style="text-decoration:none;">YouTube ↗</a>
+              </div>
+              <div class="yt-iframe-box">
+                <div id="ytPlayerHost"></div>
+              </div>
+            </div>
+
             <div>
               <input id="seekBar" type="range" min="0" max="100" value="0" step="0.05" class="slider" aria-label="播放進度" />
               <div class="time-row">
@@ -1794,6 +1858,11 @@
         gearTooltip: '程式設定（語言、主題色彩、背景圖片與辨識引擎）',
         crossSearchCurrent: '🔗 跨平台搜尋此曲',
         importLocalBtn: '＋ 匯入本地音訊 / .lrc',
+        ytPlaceholder: '貼上 YouTube / YT Music 連結或影片 ID（完整播放＋歌詞同步）...',
+        ytLoadBtn: '載入完整版',
+        ytFullBadge: 'YouTube 完整版',
+        ytEmbedNote: '🎬 YouTube 完整播放中（進度與歌詞即時同步）',
+        ytFindBtn: '🎬 YT',
         prevTrack: '上一首',
         playPause: '播放 / 暫停',
         nextTrack: '下一首',
@@ -1908,6 +1977,11 @@
         gearTooltip: '程序设置（语言、主题颜色、背景图片与识别引擎）',
         crossSearchCurrent: '🔗 跨平台搜索此曲',
         importLocalBtn: '＋ 导入本地音频 / .lrc',
+        ytPlaceholder: '粘贴 YouTube / YT Music 链接或视频 ID（完整播放＋歌词同步）...',
+        ytLoadBtn: '加载完整版',
+        ytFullBadge: 'YouTube 完整版',
+        ytEmbedNote: '🎬 YouTube 完整播放中（进度与歌词实时同步）',
+        ytFindBtn: '🎬 YT',
         prevTrack: '上一首',
         playPause: '播放 / 暂停',
         nextTrack: '下一首',
@@ -2022,6 +2096,11 @@
         gearTooltip: 'Settings (Language, Themes, Background & Engines)',
         crossSearchCurrent: '🔗 Search Across Platforms',
         importLocalBtn: '＋ Import Audio / .lrc',
+        ytPlaceholder: 'Paste YouTube / YT Music URL or Video ID (Full Playback + Synced Lyrics)...',
+        ytLoadBtn: 'Load Full',
+        ytFullBadge: 'YouTube Full',
+        ytEmbedNote: '🎬 YouTube Full Playback (Synced with Lyrics)',
+        ytFindBtn: '🎬 YT',
         prevTrack: 'Previous',
         playPause: 'Play / Pause',
         nextTrack: 'Next',
@@ -2136,6 +2215,11 @@
         gearTooltip: '設定（言語、テーマカラー、背景画像、認識エンジン）',
         crossSearchCurrent: '🔗 各サービスで検索',
         importLocalBtn: '＋ 音声 / .lrc を読込',
+        ytPlaceholder: 'YouTube / YT Music のURLまたは動画IDを貼付（フル再生＋歌詞同期）...',
+        ytLoadBtn: 'フル読込',
+        ytFullBadge: 'YouTube フル再生',
+        ytEmbedNote: '🎬 YouTube フル再生中（歌詞とリアルタイム同期）',
+        ytFindBtn: '🎬 YT',
         prevTrack: '前の曲',
         playPause: '再生 / 一時停止',
         nextTrack: '次の曲',
@@ -2365,6 +2449,245 @@
     let previewAudio = null;
     let toastTimer = null;
     let lyricRafId = null;
+    let ytPlayer = null;
+    let ytReady = false;
+    let ytApiPromise = null;
+    let ytState = -1;
+    let ytPendingAction = null;
+
+    /* ========================================================================
+       統一播放引擎抽象層（無縫整合 HTML5 Audio 與 YouTube 完整播放）
+       ======================================================================== */
+    function isCurrentYoutube() {
+      const tr = state.tracks[state.currentIndex];
+      return Boolean(tr && tr.type === 'youtube' && tr.youtubeId);
+    }
+
+    function getCurrentPlaybackTime() {
+      if (isCurrentYoutube()) {
+        try {
+          if (ytPlayer && ytReady && typeof ytPlayer.getCurrentTime === 'function') {
+            return ytPlayer.getCurrentTime() || 0;
+          }
+        } catch (e) {}
+        return 0;
+      }
+      return (audio && isFinite(audio.currentTime)) ? audio.currentTime : 0;
+    }
+
+    function getCurrentDuration() {
+      if (isCurrentYoutube()) {
+        try {
+          if (ytPlayer && ytReady && typeof ytPlayer.getDuration === 'function') {
+            const d = ytPlayer.getDuration();
+            return isFinite(d) && d > 0 ? d : 0;
+          }
+        } catch (e) {}
+        return 0;
+      }
+      return (audio && isFinite(audio.duration)) ? audio.duration : 0;
+    }
+
+    function isCurrentPaused() {
+      if (isCurrentYoutube()) {
+        return ytState !== 1;
+      }
+      return !audio || audio.paused || audio.ended;
+    }
+
+    function seekCurrentTo(sec) {
+      const target = Math.max(0, sec || 0);
+      if (isCurrentYoutube()) {
+        try {
+          if (ytPlayer && ytReady && typeof ytPlayer.seekTo === 'function') {
+            ytPlayer.seekTo(target, true);
+          }
+        } catch (e) {}
+      } else if (audio) {
+        audio.currentTime = target;
+      }
+    }
+
+    function setCurrentVolume(vol01) {
+      const clamped = Math.min(1, Math.max(0, isNaN(vol01) ? 0.8 : vol01));
+      if (audio) audio.volume = clamped;
+      try {
+        if (ytPlayer && ytReady && typeof ytPlayer.setVolume === 'function') {
+          ytPlayer.setVolume(Math.round(clamped * 100));
+        }
+      } catch (e) {}
+    }
+
+    function extractYoutubeId(input) {
+      const str = String(input || '').trim();
+      if (!str) return '';
+      if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+      const patterns = [
+        /[?&]v=([a-zA-Z0-9_-]{11})/,
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/
+      ];
+      for (const re of patterns) {
+        const m = str.match(re);
+        if (m && m[1]) return m[1];
+      }
+      return '';
+    }
+
+    function ensureYoutubeApi() {
+      if (window.YT && window.YT.Player) return Promise.resolve();
+      if (ytApiPromise) return ytApiPromise;
+      ytApiPromise = new Promise((resolve, reject) => {
+        const prevReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+          if (typeof prevReady === 'function') prevReady();
+          resolve();
+        };
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        tag.async = true;
+        tag.onerror = () => {
+          ytApiPromise = null;
+          reject(new Error('YouTube API load failed'));
+        };
+        document.head.appendChild(tag);
+      });
+      return ytApiPromise;
+    }
+
+    async function loadYoutubeVideo(videoId, autoPlay) {
+      const wrap = document.getElementById('ytEmbedWrapper');
+      const extLink = document.getElementById('ytOpenExternalLink');
+      if (wrap) wrap.classList.remove('hidden');
+      if (extLink) extLink.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
+
+      try {
+        await ensureYoutubeApi();
+      } catch (e) {
+        showToast('無法載入 YouTube 播放元件，請檢查網路或瀏覽器設定');
+        return;
+      }
+
+      if (!ytPlayer) {
+        ytReady = false;
+        ytPendingAction = { videoId, autoPlay };
+        ytPlayer = new window.YT.Player('ytPlayerHost', {
+          width: '100%',
+          height: '100%',
+          videoId: videoId,
+          playerVars: {
+            autoplay: autoPlay ? 1 : 0,
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1
+          },
+          events: {
+            onReady: () => {
+              ytReady = true;
+              const volBar = document.getElementById('volumeBar');
+              setCurrentVolume(volBar ? parseFloat(volBar.value) : 0.8);
+              if (ytPendingAction) {
+                const act = ytPendingAction;
+                ytPendingAction = null;
+                if (act.autoPlay) ytPlayer.playVideo();
+              }
+            },
+            onStateChange: (ev) => {
+              if (!isCurrentYoutube()) return;
+              ytState = ev.data;
+              if (ev.data === 1) {
+                try { if (previewAudio) previewAudio.pause(); } catch (e) {}
+                document.getElementById('playPauseBtn').textContent = '⏸';
+                document.getElementById('discVisual').classList.remove('paused');
+                startLyricSyncLoop();
+              } else if (ev.data === 2 || ev.data === 5 || ev.data === -1) {
+                document.getElementById('playPauseBtn').textContent = '▶';
+                document.getElementById('discVisual').classList.add('paused');
+                cancelAnimationFrame(lyricRafId);
+              } else if (ev.data === 0) {
+                cancelAnimationFrame(lyricRafId);
+                if (state.isLooping) {
+                  ytPlayer.seekTo(0, true);
+                  ytPlayer.playVideo();
+                } else {
+                  nextTrack();
+                }
+              }
+            },
+            onError: (ev) => {
+              if (!isCurrentYoutube()) return;
+              if (ev.data === 101 || ev.data === 150) {
+                showToast('此影片擁有者禁止外部嵌入播放，請換一個官方音訊或歌詞版連結');
+              } else {
+                showToast('YouTube 影片載入失敗（代碼 ' + ev.data + '），請確認連結是否有效');
+              }
+            }
+          }
+        });
+      } else if (ytReady) {
+        if (autoPlay) ytPlayer.loadVideoById(videoId);
+        else ytPlayer.cueVideoById(videoId);
+      } else {
+        ytPendingAction = { videoId, autoPlay };
+      }
+    }
+
+    async function addYoutubeTrackFromInput() {
+      const inputEl = document.getElementById('ytUrlInput');
+      const loadBtn = document.getElementById('ytLoadBtn');
+      const raw = inputEl ? inputEl.value.trim() : '';
+      const videoId = extractYoutubeId(raw);
+
+      if (!videoId) {
+        showToast('請貼上有效的 YouTube / YT Music 連結或 11 碼影片 ID');
+        return;
+      }
+
+      if (loadBtn) loadBtn.disabled = true;
+      showToast('正在讀取 YouTube 完整曲目資訊...');
+
+      let rawTitle = '';
+      let authorName = '';
+      try {
+        const res = await fetch('https://noembed.com/embed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + videoId));
+        if (res.ok) {
+          const meta = await res.json();
+          rawTitle = meta.title || '';
+          authorName = (meta.author_name || '').replace(/\s*-\s*Topic$/i, '').trim();
+        }
+      } catch (e) {}
+
+      let parsedTitle = 'YouTube (' + videoId + ')';
+      let parsedArtist = authorName || 'YouTube';
+      if (rawTitle) {
+        const parsed = parseAudioFilename(rawTitle);
+        parsedTitle = parsed.title || rawTitle;
+        if (parsed.artist) parsedArtist = parsed.artist;
+      }
+
+      const newTrack = {
+        id: nextTrackId(),
+        type: 'youtube',
+        youtubeId: videoId,
+        title: parsedTitle,
+        artist: parsedArtist,
+        cover: 'https://i.ytimg.com/vi/' + videoId + '/hqdefault.jpg',
+        url: '',
+        source: t('ytFullBadge'),
+        lrc: ''
+      };
+
+      state.tracks.push(newTrack);
+      if (inputEl) inputEl.value = '';
+      if (loadBtn) loadBtn.disabled = false;
+
+      renderPlaylist();
+      renderQueue();
+      loadTrack(state.tracks.length - 1, true, 'history');
+      showToast('已載入 YouTube 完整版：「' + parsedTitle + '」，可點「🔍 搜尋歌詞」同步歌詞');
+    }
 
     function showToast(msg) {
       const el = document.getElementById('toastEl');
@@ -2687,7 +3010,26 @@
       updateOffsetLabel();
 
       const track = state.tracks[idx];
-      audio.src = track.url || '';
+      const ytWrap = document.getElementById('ytEmbedWrapper');
+
+      // 切換曲目前先停止既有播放來源
+      cancelAnimationFrame(lyricRafId);
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      try {
+        if (ytPlayer && ytReady && typeof ytPlayer.pauseVideo === 'function') {
+          ytPlayer.pauseVideo();
+        }
+      } catch (e) {}
+      ytState = -1;
+      document.getElementById('playPauseBtn').textContent = '▶';
+      document.getElementById('discVisual').classList.add('paused');
+      document.getElementById('currentTimeEl').textContent = '00:00';
+      document.getElementById('durationEl').textContent = '00:00';
+      document.getElementById('seekBar').value = 0;
+
       document.getElementById('trackTitle').textContent = track.title;
       document.getElementById('trackArtist').textContent = track.artist || '未知歌手';
       document.getElementById('trackSourceBadge').textContent = track.source || '音訊曲目';
@@ -2711,13 +3053,35 @@
 
       renderPlaylist();
       renderQueue();
-      if (autoPlay && track.url) {
-        try { previewAudio.pause(); } catch (e) {}
-        audio.play().catch(() => {});
+
+      if (track.type === 'youtube' && track.youtubeId) {
+        if (audio) audio.removeAttribute('src');
+        try { if (previewAudio) previewAudio.pause(); } catch (e) {}
+        loadYoutubeVideo(track.youtubeId, autoPlay);
+      } else {
+        if (ytWrap) ytWrap.classList.add('hidden');
+        audio.src = track.url || '';
+        if (autoPlay && track.url) {
+          try { previewAudio.pause(); } catch (e) {}
+          audio.play().catch(() => {});
+        }
       }
     }
 
     function togglePlay() {
+      if (isCurrentYoutube()) {
+        if (!ytPlayer || !ytReady) {
+          showToast('YouTube 播放器載入中，請稍候再試');
+          return;
+        }
+        if (ytState === 1) {
+          ytPlayer.pauseVideo();
+        } else {
+          try { if (previewAudio) previewAudio.pause(); } catch (e) {}
+          ytPlayer.playVideo();
+        }
+        return;
+      }
       if (!audio || !audio.src) return;
       if (audio.paused) {
         try { previewAudio.pause(); } catch (e) {}
@@ -3052,10 +3416,12 @@
       document.querySelectorAll('#lyricsContainer .lyric-line').forEach((el, i) => {
         el.classList.toggle('selected-line', i === idx);
       });
-      if (state.isSyncedLyrics && item.time >= 0 && isFinite(audio.duration)) {
-        audio.currentTime = Math.max(0, Math.min(audio.duration, item.time - state.lyricOffset));
-        syncLyricsHighlight(audio.currentTime, true);
-        if (audio.paused) audio.play().catch(() => {});
+      const dur = getCurrentDuration();
+      if (state.isSyncedLyrics && item.time >= 0 && dur > 0) {
+        const targetTime = Math.max(0, Math.min(dur, item.time - state.lyricOffset));
+        seekCurrentTo(targetTime);
+        syncLyricsHighlight(targetTime, true);
+        if (isCurrentPaused()) togglePlay();
       }
     }
 
@@ -3090,8 +3456,15 @@
     function startLyricSyncLoop() {
       cancelAnimationFrame(lyricRafId);
       const tick = () => {
-        if (audio && !audio.paused && !audio.ended) {
-          syncLyricsHighlight(audio.currentTime || 0, false);
+        if (!isCurrentPaused()) {
+          const cur = getCurrentPlaybackTime();
+          if (isCurrentYoutube()) {
+            const dur = getCurrentDuration();
+            document.getElementById('currentTimeEl').textContent = formatTime(cur);
+            document.getElementById('durationEl').textContent = formatTime(dur);
+            if (dur > 0) document.getElementById('seekBar').value = (cur / dur) * 100;
+          }
+          syncLyricsHighlight(cur, false);
           lyricRafId = requestAnimationFrame(tick);
         }
       };
@@ -3107,13 +3480,13 @@
     function adjustLyricOffset(delta) {
       state.lyricOffset = Math.round((state.lyricOffset + delta) * 10) / 10;
       updateOffsetLabel();
-      syncLyricsHighlight(audio.currentTime || 0, true);
+      syncLyricsHighlight(getCurrentPlaybackTime(), true);
     }
 
     function resetLyricOffset() {
       state.lyricOffset = 0;
       updateOffsetLabel();
-      syncLyricsHighlight(audio.currentTime || 0, true);
+      syncLyricsHighlight(getCurrentPlaybackTime(), true);
       showToast('已將歌詞偏移量歸零');
     }
 
@@ -3123,7 +3496,7 @@
       if (idx < 0 || !state.parsedLyrics[idx]) {
         return showToast('請先點選一句要對齊的歌詞，再按「📌 對齊目前時間」');
       }
-      const now = audio.currentTime || 0;
+      const now = getCurrentPlaybackTime();
       state.lyricOffset = Math.round((state.parsedLyrics[idx].time - now) * 10) / 10;
       updateOffsetLabel();
       syncLyricsHighlight(now, true);
@@ -3141,7 +3514,7 @@
         titleInput.value = track.title.replace(/\(示範曲\)/g, '').trim();
         artistInput.value = (track.artist && track.artist !== '未知歌手') ? track.artist : '';
       }
-      const dur = audio ? audio.duration : NaN;
+      const dur = getCurrentDuration();
       document.getElementById('lrcTargetDurationHint').textContent = isFinite(dur) && dur > 0
         ? '目前歌曲時長：' + formatTime(dur) + '（將優先排序誤差 ≤ 5 秒且具同步時間軸的版本）'
         : '將優先排序具同步時間軸的歌詞版本';
@@ -3170,7 +3543,7 @@
           return;
         }
 
-        const targetDur = isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null;
+        const targetDur = getCurrentDuration() > 0 ? getCurrentDuration() : null;
         const scored = data.map(item => {
           const hasSynced = Boolean(item.syncedLyrics && item.syncedLyrics.trim());
           const durDiff = (targetDur !== null && typeof item.duration === 'number')
@@ -3269,7 +3642,7 @@
       }
       updateTranslateButtons();
       document.getElementById('immersiveModal').classList.remove('hidden');
-      syncLyricsHighlight(audio.currentTime || 0, true);
+      syncLyricsHighlight(getCurrentPlaybackTime(), true);
     }
     function closeImmersiveLyrics() { document.getElementById('immersiveModal').classList.add('hidden'); }
 
@@ -3617,6 +3990,7 @@
             <div style="display:flex; gap:6px; flex-shrink:0;">
               ${item.previewUrl ? `<button type="button" class="btn btn-sm" onclick="togglePreviewByUrl('${encodeURI(item.previewUrl)}')">${t('previewBtn')}</button>` : ''}
               <button type="button" class="btn btn-primary btn-sm" onclick="selectItunesResult(${globalIdx})">${t('loadPlayerBtn')}</button>
+              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(item.title + ' ' + item.artist)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" title="至 YouTube 尋找完整版並複製連結回播放器">${t('ytFindBtn')}</a>
             </div>
           </div>
         `;
@@ -3651,6 +4025,7 @@
         return;
       }
       if (audio) audio.pause();
+      try { if (ytPlayer && ytReady) ytPlayer.pauseVideo(); } catch (e) {}
       previewAudio.src = url;
       previewAudio.play().catch(() => showToast('無法播放試聽音檔'));
       showToast('正在播放 30 秒官方試聽');
@@ -3888,10 +4263,15 @@
         });
 
         document.getElementById('seekBar').addEventListener('input', (e) => {
-          if (audio.duration) {
-            audio.currentTime = (parseFloat(e.target.value) / 100) * audio.duration;
-            syncLyricsHighlight(audio.currentTime, true);
+          const dur = getCurrentDuration();
+          if (dur > 0) {
+            const target = (parseFloat(e.target.value) / 100) * dur;
+            seekCurrentTo(target);
+            syncLyricsHighlight(target, true);
           }
+        });
+        document.getElementById('volumeBar').addEventListener('input', (e) => {
+          setCurrentVolume(parseFloat(e.target.value));
         });
         document.getElementById('volumeBar').addEventListener('input', (e) => {
           audio.volume = parseFloat(e.target.value);
