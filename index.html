@@ -673,15 +673,52 @@
     .yt-iframe-box {
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
-      max-height: 190px;
+      height: 220px;
       background: #000000;
+    }
+    @media (max-width: 640px) {
+      .yt-iframe-box {
+        height: 195px;
+      }
     }
     .yt-iframe-box iframe {
       width: 100%;
       height: 100%;
       border: 0;
       display: block;
+    }
+    .yt-error-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: rgba(9, 13, 22, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .yt-error-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--danger-text);
+    }
+    .yt-error-desc {
+      margin: 0;
+      font-size: 11px;
+      color: var(--text-secondary);
+      max-width: 340px;
+      line-height: 1.5;
+    }
+    .yt-error-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 2px;
     }
 
     /* 右半部：同步歌詞面板 */
@@ -1358,21 +1395,27 @@
               </label>
             </div>
 
-            <!-- YouTube 完整播放快速載入列（免 API Key） -->
-            <div class="yt-bar">
-              <span style="font-size:15px; flex-shrink:0;" aria-hidden="true">🎬</span>
-              <input id="ytUrlInput" type="text" class="input" data-i18n-placeholder="ytPlaceholder" placeholder="貼上 YouTube / YT Music 連結或影片 ID（完整播放＋歌詞同步）..." onkeydown="if(event.key==='Enter') addYoutubeTrackFromInput()" />
-              <button id="ytLoadBtn" type="button" class="btn btn-primary btn-sm" style="white-space:nowrap; flex-shrink:0;" onclick="addYoutubeTrackFromInput()" data-i18n="ytLoadBtn">載入完整版</button>
-            </div>
-
             <!-- YouTube 內嵌播放器視窗（播放 YT 曲目時自動展開） -->
             <div id="ytEmbedWrapper" class="yt-embed-wrap hidden">
               <div class="yt-embed-head">
-                <span data-i18n="ytEmbedNote">🎬 YouTube 完整播放中（進度與歌詞即時同步）</span>
-                <a id="ytOpenExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-xs" style="text-decoration:none;">YouTube ↗</a>
+                <span id="ytEmbedStatusText" data-i18n="ytEmbedNote">🎬 YouTube 完整播放中（若未自動播放，請直接點擊影片 ▶）</span>
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                  <button type="button" class="btn btn-xs" onclick="fallbackToStandardYoutubeEmbed()" title="若畫面無法播放，切換為無痕標準嵌入">🔄 標準嵌入</button>
+                  <a id="ytOpenExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-xs" style="text-decoration:none;">YouTube ↗</a>
+                </div>
               </div>
-              <div class="yt-iframe-box">
+              <div id="ytIframeBox" class="yt-iframe-box">
                 <div id="ytPlayerHost"></div>
+                <!-- YouTube 無法嵌入或沙盒受限時的智慧救援面板 -->
+                <div id="ytErrorOverlay" class="yt-error-overlay hidden">
+                  <p id="ytErrorTitle" class="yt-error-title">⚠️ 此 YouTube 影片無法內嵌播放</p>
+                  <p id="ytErrorDesc" class="yt-error-desc">版權方可能關閉了外部網站嵌入權限，或目前預覽沙盒限制了播放來源。</p>
+                  <div class="yt-error-actions">
+                    <a id="ytFindLyricsVerLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-xs">🔍 找可嵌入的歌詞版 / Audio</a>
+                    <button type="button" class="btn btn-xs" onclick="fallbackToStandardYoutubeEmbed()">🔄 切換標準嵌入</button>
+                    <a id="ytErrorOpenLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-xs">YouTube 開啟 ↗</a>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1586,6 +1629,22 @@
                 <button id="itunesPrevBtn" type="button" class="btn btn-sm" onclick="changeItunesPage(-1)" data-i18n="prevPageBtn">◀ 上一頁</button>
                 <span id="itunesPageInfo" class="pagination-info">第 1 / 1 頁</span>
                 <button id="itunesNextBtn" type="button" class="btn btn-sm" onclick="changeItunesPage(1)" data-i18n="nextPageBtn">下一頁 ▶</button>
+              </div>
+            </div>
+
+            <!-- 🎬 YouTube 完整播放 + 歌詞同步（位於歐美搜尋與跨平台中心之間） -->
+            <div class="card panel">
+              <div class="section-head" style="margin-bottom:0;">
+                <div>
+                  <h3 style="margin:0; font-size:16px;" data-i18n="ytCardTitle">🎬 YouTube 完整播放 + 歌詞同步</h3>
+                  <p class="lyrics-status" data-i18n="ytCardSub">免 API Key，貼上 YouTube / YT Music 連結或影片 ID，載入後自動切換至播放器完整播放並同步歌詞</p>
+                </div>
+                <span class="badge" data-i18n="ytFullBadge">YouTube 完整版</span>
+              </div>
+
+              <div class="search-row">
+                <input id="ytUrlInput" type="text" class="input" data-i18n-placeholder="ytPlaceholder" placeholder="貼上 YouTube / YT Music 連結或影片 ID（完整播放＋歌詞同步）..." onkeydown="if(event.key==='Enter') addYoutubeTrackFromInput()" />
+                <button id="ytLoadBtn" type="button" class="btn btn-primary" style="white-space:nowrap;" onclick="addYoutubeTrackFromInput()" data-i18n="ytLoadBtn">載入完整版</button>
               </div>
             </div>
 
@@ -1858,6 +1917,8 @@
         gearTooltip: '程式設定（語言、主題色彩、背景圖片與辨識引擎）',
         crossSearchCurrent: '🔗 跨平台搜尋此曲',
         importLocalBtn: '＋ 匯入本地音訊 / .lrc',
+        ytCardTitle: '🎬 YouTube 完整播放 + 歌詞同步',
+        ytCardSub: '免 API Key，貼上 YouTube / YT Music 連結或影片 ID，載入後自動切換至播放器完整播放並同步歌詞',
         ytPlaceholder: '貼上 YouTube / YT Music 連結或影片 ID（完整播放＋歌詞同步）...',
         ytLoadBtn: '載入完整版',
         ytFullBadge: 'YouTube 完整版',
@@ -1977,6 +2038,8 @@
         gearTooltip: '程序设置（语言、主题颜色、背景图片与识别引擎）',
         crossSearchCurrent: '🔗 跨平台搜索此曲',
         importLocalBtn: '＋ 导入本地音频 / .lrc',
+        ytCardTitle: '🎬 YouTube 完整播放 + 歌词同步',
+        ytCardSub: '免 API Key，粘贴 YouTube / YT Music 链接或视频 ID，加载后自动切换至播放器完整播放并同步歌词',
         ytPlaceholder: '粘贴 YouTube / YT Music 链接或视频 ID（完整播放＋歌词同步）...',
         ytLoadBtn: '加载完整版',
         ytFullBadge: 'YouTube 完整版',
@@ -2096,6 +2159,8 @@
         gearTooltip: 'Settings (Language, Themes, Background & Engines)',
         crossSearchCurrent: '🔗 Search Across Platforms',
         importLocalBtn: '＋ Import Audio / .lrc',
+        ytCardTitle: '🎬 YouTube Full Playback + Synced Lyrics',
+        ytCardSub: 'No API key needed. Paste a YouTube / YT Music link or video ID to switch to the player and play in full',
         ytPlaceholder: 'Paste YouTube / YT Music URL or Video ID (Full Playback + Synced Lyrics)...',
         ytLoadBtn: 'Load Full',
         ytFullBadge: 'YouTube Full',
@@ -2215,6 +2280,8 @@
         gearTooltip: '設定（言語、テーマカラー、背景画像、認識エンジン）',
         crossSearchCurrent: '🔗 各サービスで検索',
         importLocalBtn: '＋ 音声 / .lrc を読込',
+        ytCardTitle: '🎬 YouTube フル再生 + 歌詞同期',
+        ytCardSub: 'APIキー不要。YouTube / YT Music のURLや動画IDを貼るとプレーヤーへ移動しフル再生＆歌詞同期します',
         ytPlaceholder: 'YouTube / YT Music のURLまたは動画IDを貼付（フル再生＋歌詞同期）...',
         ytLoadBtn: 'フル読込',
         ytFullBadge: 'YouTube フル再生',
@@ -2454,6 +2521,8 @@
     let ytApiPromise = null;
     let ytState = -1;
     let ytPendingAction = null;
+    let ytCurrentVideoId = '';
+    let ytFallbackMode = false;
 
     /* ========================================================================
        統一播放引擎抽象層（無縫整合 HTML5 Audio 與 YouTube 完整播放）
@@ -2527,7 +2596,8 @@
         /youtu\.be\/([a-zA-Z0-9_-]{11})/,
         /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
         /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-        /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/
+        /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
       ];
       for (const re of patterns) {
         const m = str.match(re);
@@ -2540,95 +2610,240 @@
       if (window.YT && window.YT.Player) return Promise.resolve();
       if (ytApiPromise) return ytApiPromise;
       ytApiPromise = new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            ytApiPromise = null;
+            reject(new Error('YouTube API timeout'));
+          }
+        }, 6500);
+
         const prevReady = window.onYouTubeIframeAPIReady;
         window.onYouTubeIframeAPIReady = () => {
           if (typeof prevReady === 'function') prevReady();
-          resolve();
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            resolve();
+          }
         };
-        const tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        tag.async = true;
-        tag.onerror = () => {
-          ytApiPromise = null;
-          reject(new Error('YouTube API load failed'));
-        };
-        document.head.appendChild(tag);
+
+        const existing = document.querySelector('script[src*="youtube.com/iframe_api"]');
+        if (!existing) {
+          const tag = document.createElement('script');
+          tag.src = 'https://www.youtube.com/iframe_api';
+          tag.async = true;
+          tag.onerror = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              ytApiPromise = null;
+              reject(new Error('YouTube API load failed'));
+            }
+          };
+          document.head.appendChild(tag);
+        }
       });
       return ytApiPromise;
     }
 
+    function hideYoutubeErrorOverlay() {
+      const ov = document.getElementById('ytErrorOverlay');
+      if (ov) ov.classList.add('hidden');
+    }
+
+    function showYoutubeErrorOverlay(code, titleText, descText) {
+      const ov = document.getElementById('ytErrorOverlay');
+      const tEl = document.getElementById('ytErrorTitle');
+      const dEl = document.getElementById('ytErrorDesc');
+      const findEl = document.getElementById('ytFindLyricsVerLink');
+      const openEl = document.getElementById('ytErrorOpenLink');
+      if (!ov) return;
+
+      const cur = state.tracks[state.currentIndex];
+      const q = cur ? ((cur.title || '') + ' ' + (cur.artist || '') + ' lyrics audio').trim() : 'lyrics audio';
+      if (tEl) tEl.textContent = titleText || ('⚠️ YouTube 無法內嵌播放（代碼 ' + code + '）');
+      if (dEl) dEl.textContent = descText || '建議改貼該歌曲的「歌詞版 (Lyrics)」或「官方音訊版 (Audio)」連結。';
+      if (findEl) findEl.href = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+      if (openEl) openEl.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(ytCurrentVideoId || '');
+      ov.classList.remove('hidden');
+    }
+
+    // 降級／切換為 youtube-nocookie 標準 iframe（繞過部分 JS API 或沙盒限制）
+    function fallbackToStandardYoutubeEmbed() {
+      const videoId = ytCurrentVideoId || (state.tracks[state.currentIndex] && state.tracks[state.currentIndex].youtubeId);
+      if (!videoId) return;
+
+      ytFallbackMode = true;
+      ytReady = false;
+      try {
+        if (ytPlayer && typeof ytPlayer.destroy === 'function') ytPlayer.destroy();
+      } catch (e) {}
+      ytPlayer = null;
+
+      const box = document.getElementById('ytIframeBox');
+      if (!box) return;
+      hideYoutubeErrorOverlay();
+
+      const oldHost = document.getElementById('ytPlayerHost');
+      if (oldHost) oldHost.remove();
+      box.querySelectorAll('iframe').forEach(f => f.remove());
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'ytPlayerHost';
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) + '?rel=0&playsinline=1&controls=1';
+      iframe.title = 'YouTube video player';
+      iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+      iframe.setAttribute('allowfullscreen', '');
+      box.insertBefore(iframe, box.firstChild);
+
+      const statusEl = document.getElementById('ytEmbedStatusText');
+      if (statusEl) statusEl.textContent = '🎬 已切換為標準無痕嵌入（請直接點擊影片畫面 ▶ 播放）';
+      showToast('已切換為標準無痕嵌入，請直接點擊影片畫面播放');
+    }
+
+    function resetYoutubeHostNode() {
+      const box = document.getElementById('ytIframeBox');
+      if (!box) return;
+      const oldHost = document.getElementById('ytPlayerHost');
+      if (oldHost) oldHost.remove();
+      box.querySelectorAll('iframe').forEach(f => f.remove());
+      const div = document.createElement('div');
+      div.id = 'ytPlayerHost';
+      box.insertBefore(div, box.firstChild);
+    }
+
     async function loadYoutubeVideo(videoId, autoPlay) {
+      ytCurrentVideoId = videoId;
       const wrap = document.getElementById('ytEmbedWrapper');
       const extLink = document.getElementById('ytOpenExternalLink');
+      const statusEl = document.getElementById('ytEmbedStatusText');
       if (wrap) wrap.classList.remove('hidden');
       if (extLink) extLink.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(videoId);
+      if (statusEl) statusEl.textContent = t('ytEmbedNote');
+      hideYoutubeErrorOverlay();
+
+      // 若先前已降級為標準 iframe，重新建立 API 容器
+      if (ytFallbackMode) {
+        ytFallbackMode = false;
+        resetYoutubeHostNode();
+      }
+
+      // 偵測是否為 file:// 或無效 origin（如預覽沙盒 srcdoc），主動提醒並確保不卡死
+      const hasHttpOrigin = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+        && window.location.origin
+        && window.location.origin !== 'null';
 
       try {
         await ensureYoutubeApi();
       } catch (e) {
-        showToast('無法載入 YouTube 播放元件，請檢查網路或瀏覽器設定');
+        fallbackToStandardYoutubeEmbed();
         return;
+      }
+
+      const playerVars = {
+        autoplay: autoPlay ? 1 : 0,
+        controls: 1,
+        enablejsapi: 1,
+        fs: 1,
+        rel: 0,
+        modestbranding: 1,
+        playsinline: 1
+      };
+      if (hasHttpOrigin) {
+        playerVars.origin = window.location.origin;
       }
 
       if (!ytPlayer) {
         ytReady = false;
         ytPendingAction = { videoId, autoPlay };
-        ytPlayer = new window.YT.Player('ytPlayerHost', {
-          width: '100%',
-          height: '100%',
-          videoId: videoId,
-          playerVars: {
-            autoplay: autoPlay ? 1 : 0,
-            rel: 0,
-            modestbranding: 1,
-            playsinline: 1
-          },
-          events: {
-            onReady: () => {
-              ytReady = true;
-              const volBar = document.getElementById('volumeBar');
-              setCurrentVolume(volBar ? parseFloat(volBar.value) : 0.8);
-              if (ytPendingAction) {
-                const act = ytPendingAction;
-                ytPendingAction = null;
-                if (act.autoPlay) ytPlayer.playVideo();
-              }
-            },
-            onStateChange: (ev) => {
-              if (!isCurrentYoutube()) return;
-              ytState = ev.data;
-              if (ev.data === 1) {
-                try { if (previewAudio) previewAudio.pause(); } catch (e) {}
-                document.getElementById('playPauseBtn').textContent = '⏸';
-                document.getElementById('discVisual').classList.remove('paused');
-                startLyricSyncLoop();
-              } else if (ev.data === 2 || ev.data === 5 || ev.data === -1) {
-                document.getElementById('playPauseBtn').textContent = '▶';
-                document.getElementById('discVisual').classList.add('paused');
-                cancelAnimationFrame(lyricRafId);
-              } else if (ev.data === 0) {
-                cancelAnimationFrame(lyricRafId);
-                if (state.isLooping) {
-                  ytPlayer.seekTo(0, true);
-                  ytPlayer.playVideo();
+        try {
+          ytPlayer = new window.YT.Player('ytPlayerHost', {
+            width: '100%',
+            height: '100%',
+            host: 'https://www.youtube.com',
+            videoId: videoId,
+            playerVars: playerVars,
+            events: {
+              onReady: (ev) => {
+                ytReady = true;
+                try {
+                  const iframeEl = ev.target.getIframe();
+                  if (iframeEl) {
+                    iframeEl.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                    iframeEl.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+                  }
+                } catch (e) {}
+                const volBar = document.getElementById('volumeBar');
+                setCurrentVolume(volBar ? parseFloat(volBar.value) : 0.8);
+                if (ytPendingAction) {
+                  const act = ytPendingAction;
+                  ytPendingAction = null;
+                  if (act.autoPlay) {
+                    try { ytPlayer.playVideo(); } catch (e) {}
+                  }
+                }
+              },
+              onStateChange: (ev) => {
+                if (!isCurrentYoutube()) return;
+                ytState = ev.data;
+                if (ev.data === 1) {
+                  hideYoutubeErrorOverlay();
+                  try { if (previewAudio) previewAudio.pause(); } catch (e) {}
+                  document.getElementById('playPauseBtn').textContent = '⏸';
+                  document.getElementById('discVisual').classList.remove('paused');
+                  startLyricSyncLoop();
+                } else if (ev.data === 2 || ev.data === 5 || ev.data === -1) {
+                  document.getElementById('playPauseBtn').textContent = '▶';
+                  document.getElementById('discVisual').classList.add('paused');
+                  cancelAnimationFrame(lyricRafId);
+                } else if (ev.data === 0) {
+                  cancelAnimationFrame(lyricRafId);
+                  if (state.isLooping) {
+                    ytPlayer.seekTo(0, true);
+                    ytPlayer.playVideo();
+                  } else {
+                    nextTrack();
+                  }
+                }
+              },
+              onError: (ev) => {
+                if (!isCurrentYoutube()) return;
+                const code = ev.data;
+                if (code === 101 || code === 150) {
+                  showYoutubeErrorOverlay(
+                    code,
+                    '⚠️ 此官方影片禁止外部網站嵌入（錯誤 ' + code + '）',
+                    '唱片公司常會鎖定官方 MV 不可嵌入。請點下方「找可嵌入的歌詞版 / Audio」，複製任一歌詞版連結貼回來即可完整播放並同步歌詞！'
+                  );
+                } else if (code === 153 || !hasHttpOrigin) {
+                  showYoutubeErrorOverlay(
+                    code,
+                    '⚠️ 預覽沙盒限制 YouTube 播放（錯誤 ' + code + '）',
+                    '目前網頁執行在沙盒或本機檔案環境中，YouTube 會因缺少網址來源而拒絕播放；上架至 GitHub Pages (HTTPS) 後即可正常使用，或先點「切換標準嵌入」重試。'
+                  );
                 } else {
-                  nextTrack();
+                  showYoutubeErrorOverlay(
+                    code,
+                    '⚠️ YouTube 影片載入失敗（代碼 ' + code + '）',
+                    '影片可能已設為私人、下架或有地區限制，請嘗試更換其他連結。'
+                  );
                 }
               }
-            },
-            onError: (ev) => {
-              if (!isCurrentYoutube()) return;
-              if (ev.data === 101 || ev.data === 150) {
-                showToast('此影片擁有者禁止外部嵌入播放，請換一個官方音訊或歌詞版連結');
-              } else {
-                showToast('YouTube 影片載入失敗（代碼 ' + ev.data + '），請確認連結是否有效');
-              }
             }
-          }
-        });
+          });
+        } catch (err) {
+          fallbackToStandardYoutubeEmbed();
+        }
       } else if (ytReady) {
-        if (autoPlay) ytPlayer.loadVideoById(videoId);
-        else ytPlayer.cueVideoById(videoId);
+        try {
+          if (autoPlay) ytPlayer.loadVideoById(videoId);
+          else ytPlayer.cueVideoById(videoId);
+        } catch (e) {
+          fallbackToStandardYoutubeEmbed();
+        }
       } else {
         ytPendingAction = { videoId, autoPlay };
       }
@@ -2683,8 +2898,13 @@
       if (inputEl) inputEl.value = '';
       if (loadBtn) loadBtn.disabled = false;
 
+      const crossInput = document.getElementById('crossPlatformInput');
+      if (crossInput) crossInput.value = (parsedTitle + ' ' + parsedArtist).trim();
+      renderPlatformCards();
+
       renderPlaylist();
       renderQueue();
+      switchTab('player');
       loadTrack(state.tracks.length - 1, true, 'history');
       showToast('已載入 YouTube 完整版：「' + parsedTitle + '」，可點「🔍 搜尋歌詞」同步歌詞');
     }
@@ -3937,6 +4157,15 @@
     async function runItunesSearch() {
       const term = document.getElementById('itunesSearchInput').value.trim();
       if (!term) return;
+
+      // 若直接將 YouTube 連結貼入 iTunes 搜尋欄，自動轉交 YouTube 完整播放載入
+      if (/(youtube\.com|youtu\.be)/i.test(term) && extractYoutubeId(term)) {
+        const ytInput = document.getElementById('ytUrlInput');
+        if (ytInput) ytInput.value = term;
+        addYoutubeTrackFromInput();
+        return;
+      }
+
       const region = document.getElementById('regionSelect').value;
       const box = document.getElementById('itunesResultsList');
       const pager = document.getElementById('itunesPagination');
@@ -4272,9 +4501,6 @@
         });
         document.getElementById('volumeBar').addEventListener('input', (e) => {
           setCurrentVolume(parseFloat(e.target.value));
-        });
-        document.getElementById('volumeBar').addEventListener('input', (e) => {
-          audio.volume = parseFloat(e.target.value);
         });
 
         // 本地音訊 / .lrc 匯入與拖放（歷史加入歌曲區）
